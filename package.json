@@ -1,0 +1,28 @@
+{
+  "name": "youtube-tracker",
+  "version": "1.0.0",
+  "description": "Track your progress on Youtube videos",
+  "main": "background.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/franverona/youtube-tracker.git"
+  },
+  "keywords": [
+    "chrome-extension",
+    "youtube",
+    "tracker",
+    "videos"
+  ],
+  "author": "Fran Verona (franverona@gmail.com)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/franverona/youtube-tracker/issues"
+  },
+  "homepage": "https://github.com/franverona/youtube-tracker#readme",
+  "devDependencies": {
+    "eslint-config-prettier": "^10.1.5"
+  }
+}
