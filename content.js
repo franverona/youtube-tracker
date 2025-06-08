@@ -120,11 +120,32 @@ function loadProgress(videoId, videoElement) {
 
   // Save progress every few seconds (e.g., every 5 seconds)
   let saveInterval
-  videoElement.addEventListener('play', function () {
-    if (saveInterval) clearInterval(saveInterval) // Clear any existing interval
+
+  // Determine the save interval based on video duration
+  const setSaveInterval = () => {
+    if (saveInterval) {
+      clearInterval(saveInterval); // Clear any existing interval
+    }
+
+    // Get video duration. It might not be available immediately, so wait for loadedmetadata or similar.
+    // We can rely on the 'loadedmetadata' event listener further down.
+    const durationInSeconds = videoElement.duration;
+
+    const shortVideoThreshold = 15 * 60; // 15 minutes in seconds
+    let currentSaveDelay = 5000; // Default to 5 seconds (5000ms)
+
+    if (durationInSeconds && durationInSeconds > shortVideoThreshold) {
+      currentSaveDelay = 30000; // 30 seconds (30000ms)
+      console.log(`Video is long (${durationInSeconds}s > ${shortVideoThreshold}s), saving every 30 seconds.`)
+    }
+
     saveInterval = setInterval(() => {
-      saveProgress(videoId, videoElement.currentTime)
-    }, 5000) // Save every 5 seconds
+      saveProgress(videoId, videoElement.currentTime);
+    }, currentSaveDelay)
+  }
+
+  videoElement.addEventListener('play', function () {
+    setSaveInterval()
   })
 
   videoElement.addEventListener('pause', function () {
@@ -149,6 +170,8 @@ function loadProgress(videoId, videoElement) {
       }
     })
   })
+
+  videoElement.addEventListener('loadedmetadata', setSaveInterval)
 
   // Also save progress when the tab is closed or navigated away from
   window.addEventListener('beforeunload', function () {
