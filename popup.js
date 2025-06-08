@@ -36,14 +36,9 @@ document.addEventListener('DOMContentLoaded', function () {
       const sortedVideoIds = Object.keys(items).sort()
 
       sortedVideoIds.forEach((videoId) => {
-        const progress = items[videoId]
+        const { currentTime: progress, title: videoTitle } = items[videoId]
         const listItem = document.createElement('li')
         listItem.classList.add('video-item')
-
-        // You'd ideally fetch the video title here.
-        // For simplicity, we'll just display the video ID for now.
-        // To get the title, you'd need the YouTube Data API or have the content script send it.
-        const videoTitle = videoId // Placeholder
 
         listItem.innerHTML = `
           <span class="video-title" title="${videoTitle}">${videoTitle}</span>

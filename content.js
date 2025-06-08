@@ -9,17 +9,44 @@ function getVideoElement() {
   return document.querySelector('video')
 }
 
+// Get the video title from the page
+// YouTube typically puts the title in a <title> tag or a specific H1 element.
+// We'll try the H1 first, then fallback to document.title
+function getVideoTitle() {
+  // Modern YouTube selectors
+  const titleElement = document.querySelector(
+    'h1.ytd-watch-metadata, h1.ytd-video-primary-info-renderer'
+  )
+  if (titleElement?.innerText) {
+    return titleElement.innerText.trim()
+  }
+
+  if (document.title) {
+    // Fallback to document.title, often includes " - YouTube" which you might want to strip
+    return document.title.replace(/ - YouTube$/, '').trim()
+  }
+
+  return 'Unknown Title'
+}
+
 // Function to save current progress
 function saveProgress(videoId, currentTime) {
-  if (videoId && currentTime !== null) {
-    chrome.storage.local.set({ [videoId]: currentTime }, function () {
-      if (chrome.runtime.lastError) {
-        console.error('Error saving progress:', chrome.runtime.lastError)
-      } else {
-        console.log(`Progress for video ${videoId} saved: ${currentTime}`)
-      }
-    })
+  if (!videoId || currentTime === null) {
+    console.warn('saveProgress: Missing video ID or current time.')
+    return
   }
+
+  const videoData = {
+    currentTime: currentTime,
+    title: getVideoTitle(),
+    timestamp: Date.now(),
+    url: `https://www.youtube.com/watch?v=${videoId}`
+  }
+  chrome.storage.local.set({ [videoId]: videoData }, function () {
+    if (chrome.runtime.lastError) {
+      console.error('Error saving progress:', chrome.runtime.lastError)
+    }
+  })
 }
 
 // Function to load and set progress
@@ -35,34 +62,40 @@ function loadProgress(videoId, videoElement) {
       return
     }
 
-    const savedTime = result[videoId]
-    if (savedTime && savedTime > 0) {
-      console.log(`loadProgress: Found saved time for ${videoId}: ${savedTime}`)
+    const savedData = result[videoId]
+    if (!savedData) {
+      return
+    }
 
+    const { currentTime } = videoData
+    if (currentTime > 0) {
       // We need to wait until the video is ready to be played/seeked
       // loadeddata ensures enough data to play, but canplaythrough is even better for seeking without buffering issues
       const trySetCurrentTime = () => {
         if (videoElement.readyState >= 2) {
           // HTMLMediaElement.HAVE_CURRENT_DATA or higher
-          // Check if savedTime is not very close to the end of the video
+          // Check if currentTime is not very close to the end of the video
           // Prevents resetting to almost finished videos
-          if (videoElement.duration && videoElement.duration - savedTime < 5) {
+          if (
+            videoElement.duration &&
+            videoElement.duration - currentTime < 5
+          ) {
             // e.g., within 5 seconds of end
             console.log(
-              `loadProgress: Saved time (${savedTime}) is too close to end (${videoElement.duration}), not setting.`
+              `loadProgress: Saved time (${currentTime}) is too close to end (${videoElement.duration}), not setting.`
             )
             return
           }
 
-          videoElement.currentTime = savedTime
+          videoElement.currentTime = currentTime
           console.log(
-            `loadProgress: Successfully set currentTime for ${videoId} to ${savedTime}`
+            `loadProgress: Successfully set currentTime for ${videoId} to ${currentTime}`
           )
 
           // Optional: Try to play the video if it's paused and not at the very beginning
           // This might be blocked by autoplay policies unless user interaction occurs.
           // Consider adding a small delay if it doesn't work immediately.
-          if (videoElement.paused && savedTime > 1) {
+          if (videoElement.paused && currentTime > 1) {
             // Don't autoplay from 0
             videoElement.play().catch((e) => {
               console.warn('loadProgress: Autoplay prevented:', e)
@@ -124,23 +157,25 @@ function loadProgress(videoId, videoElement) {
   // Determine the save interval based on video duration
   const setSaveInterval = () => {
     if (saveInterval) {
-      clearInterval(saveInterval); // Clear any existing interval
+      clearInterval(saveInterval) // Clear any existing interval
     }
 
     // Get video duration. It might not be available immediately, so wait for loadedmetadata or similar.
     // We can rely on the 'loadedmetadata' event listener further down.
-    const durationInSeconds = videoElement.duration;
+    const durationInSeconds = videoElement.duration
 
-    const shortVideoThreshold = 15 * 60; // 15 minutes in seconds
-    let currentSaveDelay = 5000; // Default to 5 seconds (5000ms)
+    const shortVideoThreshold = 15 * 60 // 15 minutes in seconds
+    let currentSaveDelay = 5000 // Default to 5 seconds (5000ms)
 
     if (durationInSeconds && durationInSeconds > shortVideoThreshold) {
-      currentSaveDelay = 30000; // 30 seconds (30000ms)
-      console.log(`Video is long (${durationInSeconds}s > ${shortVideoThreshold}s), saving every 30 seconds.`)
+      currentSaveDelay = 30000 // 30 seconds (30000ms)
+      console.log(
+        `Video is long (${durationInSeconds}s > ${shortVideoThreshold}s), saving every 30 seconds.`
+      )
     }
 
     saveInterval = setInterval(() => {
-      saveProgress(videoId, videoElement.currentTime);
+      saveProgress(videoId, videoElement.currentTime)
     }, currentSaveDelay)
   }
 
