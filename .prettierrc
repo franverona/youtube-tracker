@@ -2,9 +2,8 @@
   "trailingComma": "all",
   "semi": false,
   "singleQuote": true,
-  "arrowParens": "avoid",
   "printWidth": 120,
-  "bracketSameLine": true,
+  "bracketSameLine": false,
   "htmlWhitespaceSensitivity": "strict",
   "plugins": [
     "prettier-plugin-tailwindcss"
