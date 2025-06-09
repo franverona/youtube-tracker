@@ -12,7 +12,7 @@ https://developer.chrome.com/docs/extensions/develop/concepts/content-scripts
 
 ```ts
 {
-  matches: ['URL_FOR_INJECT'], 
+  matches: ['URL_FOR_INJECT'],
   js: ['content/{matches_folder_name}.iife.js']
 }
 ```

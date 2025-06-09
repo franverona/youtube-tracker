@@ -3,9 +3,17 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@src/*": ["src/*"]
+      "@src/*": [
+        "src/*"
+      ]
     },
-    "types": ["chrome", "node"]
+    "types": [
+      "chrome",
+      "node"
+    ]
   },
-  "include": ["src", "build.mts"]
+  "include": [
+    "src",
+    "build.mts"
+  ]
 }
