@@ -1,6 +1,6 @@
-const CHOICE_QUESTION = 'Choose feature to';
-export const RECOVER_CHOICE_QUESTION = `${CHOICE_QUESTION} recover`;
-export const DELETE_CHOICE_QUESTION = `${CHOICE_QUESTION} delete`;
+const CHOICE_QUESTION = 'Choose feature to'
+export const RECOVER_CHOICE_QUESTION = `${CHOICE_QUESTION} recover`
+export const DELETE_CHOICE_QUESTION = `${CHOICE_QUESTION} delete`
 
 export const DEFAULT_CHOICES = [
   { name: 'Content Script (Execute JS on Web Page)', value: 'content' },
@@ -13,23 +13,23 @@ export const DEFAULT_CHOICES = [
   { name: 'Side Panel', value: 'side-panel' },
   { name: 'Options Page', value: 'options' },
   { name: 'All tests', value: 'tests' },
-] as const;
+] as const
 
-export const DEFAULT_CHOICES_VALUES = DEFAULT_CHOICES.map(item => item.value);
+export const DEFAULT_CHOICES_VALUES = DEFAULT_CHOICES.map(item => item.value)
 
 export const HELP_EXAMPLES = [
   ['-d content-ui content-runtime', 'Delete content-ui and content-runtime'],
   ['--de content devtools', 'Delete everything exclude content and devtools'],
   ['-r options side-panel', 'Recover options and side-panel'],
   ['--re popup new-tab', 'Recover everything exclude popup and new-tab'],
-] as const;
+] as const
 
 export const CLI_OPTIONS = [
   { alias: 'd', type: 'array', description: 'Delete specified features' },
   { alias: 'r', type: 'array', description: 'Recover specified features' },
   { alias: 'de', type: 'array', description: 'Delete all features except specified' },
   { alias: 're', type: 'array', description: 'Recover all features except specified' },
-] as const;
+] as const
 
 export const MANAGER_ACTION_PROMPT_CONFIG = {
   message: 'Choose a tool',
@@ -37,7 +37,7 @@ export const MANAGER_ACTION_PROMPT_CONFIG = {
     { name: 'Delete Feature', value: 'delete' },
     { name: 'Recover Feature', value: 'recover' },
   ],
-} as const;
+} as const
 
 export const MODULE_CONFIG = {
   content: {
@@ -78,7 +78,7 @@ export const MODULE_CONFIG = {
   popup: {
     action: {
       default_popup: 'popup/index.html',
-      default_icon: 'icon-34.png',
+      default_icon: 'icon-48.png',
     },
   },
   devtools: {
@@ -93,6 +93,6 @@ export const MODULE_CONFIG = {
   options: {
     options_page: 'options/index.html',
   },
-} as const;
+} as const
 
-export const EXIT_PROMPT_ERROR = 'ExitPromptError';
+export const EXIT_PROMPT_ERROR = 'ExitPromptError'

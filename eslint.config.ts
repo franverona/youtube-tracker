@@ -1,13 +1,13 @@
-import { fixupConfigRules } from '@eslint/compat';
-import { FlatCompat } from '@eslint/eslintrc';
-import js from '@eslint/js';
-import { flatConfigs as importXFlatConfig } from 'eslint-plugin-import-x';
-import jsxA11y from 'eslint-plugin-jsx-a11y';
-import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
-import reactPlugin from 'eslint-plugin-react';
-import { browser, es2020, node } from 'globals';
-import { config, configs as tsConfigs, parser as tsParser } from 'typescript-eslint';
-import type { FixupConfigArray } from '@eslint/compat';
+import type { FixupConfigArray } from '@eslint/compat'
+import { fixupConfigRules } from '@eslint/compat'
+import { FlatCompat } from '@eslint/eslintrc'
+import js from '@eslint/js'
+import { flatConfigs as importXFlatConfig } from 'eslint-plugin-import-x'
+import jsxA11y from 'eslint-plugin-jsx-a11y'
+import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
+import reactPlugin from 'eslint-plugin-react'
+import { browser, es2020, node } from 'globals'
+import { config, configs as tsConfigs, parser as tsParser } from 'typescript-eslint'
 
 export default config(
   // Shared configs
@@ -65,22 +65,6 @@ export default config(
       'arrow-body-style': ['error', 'as-needed'],
       '@typescript-eslint/consistent-type-imports': 'error',
       '@typescript-eslint/consistent-type-exports': 'error',
-      'import-x/order': [
-        'error',
-        {
-          'newlines-between': 'never',
-          alphabetize: { order: 'asc', caseInsensitive: true },
-          groups: ['index', 'sibling', 'parent', 'internal', 'external', 'builtin', 'object', 'type'],
-          pathGroups: [
-            {
-              pattern: '@*/**',
-              group: 'internal',
-              position: 'before',
-            },
-          ],
-          pathGroupsExcludedImportTypes: ['type'],
-        },
-      ],
       'import-x/no-unresolved': 'off',
       'import-x/no-named-as-default': 'error',
       'import-x/no-named-as-default-member': 'error',
@@ -102,4 +86,4 @@ export default config(
       'no-restricted-imports': 'off',
     },
   },
-);
+)

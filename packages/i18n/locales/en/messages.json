@@ -1,11 +1,11 @@
 {
   "extensionDescription": {
-    "description": "Extension description",
-    "message": "Chrome extension boilerplate developed with Vite, React and Typescript"
+    "description": "",
+    "message": "Track your progress on Youtube videos"
   },
   "extensionName": {
-    "description": "Extension name",
-    "message": "Chrome extension boilerplate"
+    "description": "",
+    "message": "Youtube Tracker"
   },
   "toggleTheme": {
     "message": "Toggle theme"

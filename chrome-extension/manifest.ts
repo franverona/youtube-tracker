@@ -1,7 +1,7 @@
-import { readFileSync } from 'node:fs';
-import type { ManifestType } from '@extension/shared';
+import type { ManifestType } from '@extension/shared'
+import { readFileSync } from 'node:fs'
 
-const packageJson = JSON.parse(readFileSync('./package.json', 'utf8'));
+const packageJson = JSON.parse(readFileSync('./package.json', 'utf8'))
 
 /**
  * @prop default_locale
@@ -39,7 +39,7 @@ const manifest = {
   },
   action: {
     default_popup: 'popup/index.html',
-    default_icon: 'icon-34.png',
+    default_icon: 'icon-48.png',
   },
   icons: {
     '128': 'icon-128.png',
@@ -69,13 +69,13 @@ const manifest = {
   devtools_page: 'devtools/index.html',
   web_accessible_resources: [
     {
-      resources: ['*.js', '*.css', '*.svg', 'icon-128.png', 'icon-34.png'],
+      resources: ['*.js', '*.css', '*.svg', 'icon-128.png', 'icon-48.png'],
       matches: ['*://*/*'],
     },
   ],
   side_panel: {
     default_path: 'side-panel/index.html',
   },
-} satisfies ManifestType;
+} satisfies ManifestType
 
-export default manifest;
+export default manifest
