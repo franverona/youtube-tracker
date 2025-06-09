@@ -14,6 +14,6 @@
   },
   "include": [
     "src",
-    "build.mts"
+    "build.mts",
   ]
 }

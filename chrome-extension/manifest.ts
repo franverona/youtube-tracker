@@ -30,7 +30,7 @@ const manifest = {
   },
   version: packageJson.version,
   description: '__MSG_extensionDescription__',
-  host_permissions: ['<all_urls>'],
+  host_permissions: ['*://*.youtube.com/*'],
   permissions: ['storage', 'scripting', 'tabs', 'notifications', 'sidePanel'],
   options_page: 'options/index.html',
   background: {
@@ -46,24 +46,9 @@ const manifest = {
   },
   content_scripts: [
     {
-      matches: ['http://*/*', 'https://*/*', '<all_urls>'],
-      js: ['content/all.iife.js'],
-    },
-    {
-      matches: ['https://example.com/*'],
-      js: ['content/example.iife.js'],
-    },
-    {
-      matches: ['http://*/*', 'https://*/*', '<all_urls>'],
-      js: ['content-ui/all.iife.js'],
-    },
-    {
-      matches: ['https://example.com/*'],
-      js: ['content-ui/example.iife.js'],
-    },
-    {
-      matches: ['http://*/*', 'https://*/*', '<all_urls>'],
-      css: ['content.css'],
+      matches: ['*://*.youtube.com/watch*'],
+      js: ['content/youtube.iife.js'],
+      all_frames: false,
     },
   ],
   devtools_page: 'devtools/index.html',

@@ -55,6 +55,7 @@ export type ThemeStorageType = BaseStorageType<ThemeStateType> & {
 
 export interface VideoDetails {
   progress: number
+  timestamp: number
   title: string
   url: string
 }
