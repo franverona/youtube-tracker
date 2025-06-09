@@ -80,4 +80,4 @@ async function initContent() {
   })
 }
 
-await initContent()
+initContent()

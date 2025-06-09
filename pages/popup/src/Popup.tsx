@@ -2,14 +2,17 @@ import { useStorage, withErrorBoundary, withSuspense } from '@extension/shared'
 import { exampleThemeStorage, videoStorage } from '@extension/storage'
 import { cn, ErrorDisplay, LoadingSpinner } from '@extension/ui'
 import '@src/Popup.css'
-import { formatTime } from './utils'
+import { formatTime, getVideoId } from './utils'
 
 const Popup = () => {
   const { isLight } = useStorage(exampleThemeStorage)
   const videos = useStorage(videoStorage)
 
-  const onClickRemove = (id: string) => {
-    videoStorage.remove(id)
+  const onClickRemove = (url: string) => {
+    const id = getVideoId(url)
+    if (id) {
+      videoStorage.remove(id)
+    }
   }
 
   return (
@@ -25,7 +28,7 @@ const Popup = () => {
           </p>
           <p>Progress: {formatTime(progress)}s</p>
           <p className="mb-2">Last save: {new Date(timestamp).toLocaleString()}</p>
-          <p className="cursor-pointer text-red-600 underline" onClick={() => onClickRemove(id)} aria-hidden>
+          <p className="cursor-pointer text-red-600 underline" onClick={() => onClickRemove(url)} aria-hidden>
             Remove
           </p>
         </div>
