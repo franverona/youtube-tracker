@@ -54,6 +54,7 @@ export type ThemeStorageType = BaseStorageType<ThemeStateType> & {
 }
 
 export interface VideoDetails {
+  id: string
   progress: number
   timestamp: number
   title: string
@@ -65,6 +66,8 @@ export interface VideoStateType {
 }
 
 export type VideoStorageType = BaseStorageType<VideoStateType> & {
+  getById: (id: string) => Promise<VideoDetails | undefined>
+  save: (id: string, details: VideoDetails) => Promise<void>
   clear: () => Promise<void>
-  remove: (id: string) => Promise<VideoStateType>
+  remove: (id: string) => Promise<void>
 }

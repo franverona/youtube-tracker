@@ -8,14 +8,26 @@ const Popup = () => {
   const { isLight } = useStorage(exampleThemeStorage)
   const videos = useStorage(videoStorage)
 
+  const onClickRemove = (id: string) => {
+    videoStorage.remove(id)
+  }
+
   return (
     <div className={cn('App', isLight ? 'bg-slate-50' : 'bg-gray-800')}>
-      <h3>Saved Progress</h3>
-      {Object.values(videos).map(({ progress, title, url }) => (
-        <div key={url}>
-          <p>{title}</p>
-          <p>{url}</p>
-          <p>{formatTime(progress)}</p>
+      <h3 className="mb-2 text-xs font-medium uppercase">Saved Progress</h3>
+      {Object.values(videos).map(({ id, progress, timestamp, title, url }) => (
+        <div key={id} className="mb-4">
+          <p className="mb-2 text-base font-semibold">{title}</p>
+          <p className="mb-2 text-blue-600 underline">
+            <a href={url} target="_blank">
+              {url}
+            </a>
+          </p>
+          <p>Progress: {formatTime(progress)}s</p>
+          <p className="mb-2">Last save: {new Date(timestamp).toLocaleString()}</p>
+          <p className="cursor-pointer text-red-600 underline" onClick={() => onClickRemove(id)} aria-hidden>
+            Remove
+          </p>
         </div>
       ))}
     </div>

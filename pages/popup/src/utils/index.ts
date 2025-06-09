@@ -1,2 +1,3 @@
-export * from './stringUtils';
+export * from './stringUtils'
+export * from './youtubeUtils'
 

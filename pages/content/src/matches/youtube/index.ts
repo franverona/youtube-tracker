@@ -1,6 +1,6 @@
 import { getVideoElement, getVideoId, loadProgress, saveProgress } from './utils'
 
-function initContent() {
+async function initContent() {
   const videoId = getVideoId()
   const videoElement = getVideoElement()
 
@@ -11,10 +11,10 @@ function initContent() {
 
   // Initial attempt to load progress as soon as the video element is available
   // This is important because YouTube's player might already be loading data.
-  loadProgress(videoId, videoElement)
+  await loadProgress(videoId, videoElement)
 
-  videoElement.addEventListener('loadedmetadata', function listener() {
-    loadProgress(videoId, videoElement)
+  videoElement.addEventListener('loadedmetadata', async function listener() {
+    await loadProgress(videoId, videoElement)
     // You might choose to remove this listener after the first successful attempt
     // to avoid redundant calls, but the `trySetCurrentTime` in `loadProgress` handles removal.
   })
@@ -40,8 +40,8 @@ function initContent() {
       console.log(`Video is long (${durationInSeconds}s > ${shortVideoThreshold}s), saving every 30 seconds.`)
     }
 
-    saveInterval = setInterval(() => {
-      saveProgress(videoId, videoElement.currentTime)
+    saveInterval = setInterval(async () => {
+      await saveProgress(videoId, videoElement.currentTime)
     }, currentSaveDelay)
   }
 
@@ -49,12 +49,12 @@ function initContent() {
     setSaveInterval()
   })
 
-  videoElement.addEventListener('pause', function () {
+  videoElement.addEventListener('pause', async function () {
     if (saveInterval) {
       clearInterval(saveInterval)
       saveInterval = null
     }
-    saveProgress(videoId, videoElement.currentTime) // Save immediately on pause
+    await saveProgress(videoId, videoElement.currentTime) // Save immediately on pause
   })
 
   videoElement.addEventListener('ended', function () {
@@ -75,9 +75,9 @@ function initContent() {
   videoElement.addEventListener('loadedmetadata', setSaveInterval)
 
   // Also save progress when the tab is closed or navigated away from
-  window.addEventListener('beforeunload', function () {
-    saveProgress(videoId, videoElement.currentTime)
+  window.addEventListener('beforeunload', async function () {
+    await saveProgress(videoId, videoElement.currentTime)
   })
 }
 
-initContent()
+await initContent()

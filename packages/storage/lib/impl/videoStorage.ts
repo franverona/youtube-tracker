@@ -1,4 +1,4 @@
-import type { VideoStateType, VideoStorageType } from '../base/index.js'
+import type { VideoDetails, VideoStateType, VideoStorageType } from '../base/index.js'
 import { createStorage, StorageEnum } from '../base/index.js'
 
 const storage = createStorage<VideoStateType>(
@@ -12,13 +12,28 @@ const storage = createStorage<VideoStateType>(
 
 export const videoStorage: VideoStorageType = {
   ...storage,
+  getById: async (id: string) => {
+    const content = await storage.get()
+    return content[id]
+  },
+  save: async (id: string, details: VideoDetails) => {
+    await storage.set((currentState) => ({
+      ...currentState,
+      [id]: details,
+    }))
+  },
   clear: async () => {
+    await storage.set(() => ({}))
     await storage.set(() => ({}))
   },
   remove: async (id) => {
-    // TODO Remove id
-    console.log(`Remove ${id}`)
-    const content = await storage.get()
-    return content
+    await storage.set((currentState) => {
+      const newState = {
+        ...currentState,
+      }
+      delete newState[id]
+      console.log(newState, id)
+      return newState
+    })
   },
 }
