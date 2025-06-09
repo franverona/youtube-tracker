@@ -1,11 +1,11 @@
-import { t } from '@extension/i18n';
-import { ToggleButton } from '@extension/ui';
-import { useEffect } from 'react';
+import { t } from '@extension/i18n'
+import { ToggleButton } from '@extension/ui'
+import { useEffect } from 'react'
 
 export default function App() {
   useEffect(() => {
-    console.log('[CEB] Content ui all loaded');
-  }, []);
+    console.log('[CEB] Content ui all loaded')
+  }, [])
 
   return (
     <div className="flex items-center justify-between gap-2 rounded bg-blue-100 px-2 py-1">
@@ -14,5 +14,5 @@ export default function App() {
       </div>
       <ToggleButton className={'mt-0'}>{t('toggleTheme')}</ToggleButton>
     </div>
-  );
+  )
 }
