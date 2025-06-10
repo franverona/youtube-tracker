@@ -4,3 +4,7 @@ export function getVideoId(url: string) {
   const urlParams = new URLSearchParams(location.search)
   return urlParams.get('v')
 }
+
+export function getThumbnail(id: string) {
+  return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`
+}
