@@ -3,6 +3,9 @@ import { getVideoElement, getVideoId, loadProgress, saveProgress } from './utils
 let currentVideoId: string | null = null
 let currentVideoElement: HTMLVideoElement | null = null
 let saveInterval: NodeJS.Timeout | null = null
+let initializationAttempts = 0
+const MAX_INITIALIZATION_ATTEMPTS: number = 20 // Try up to 10 seconds (20 * 500ms)
+const INITIALIZATION_RETRY_DELAY: number = 500 // 0.5 seconds
 
 async function saveCurrent() {
   if (!currentVideoId || !currentVideoElement) {
@@ -12,25 +15,39 @@ async function saveCurrent() {
 }
 
 async function initializeVideoTracking() {
-  if (saveInterval) {
-    console.log('Clear current interval when setting a new one')
-    clearInterval(saveInterval) // Clear any existing interval
-  }
-
   const newVideoId = getVideoId()
   const newVideoElement = getVideoElement()
-  if (!newVideoId || !newVideoElement) {
-    console.warn('Could not find video ID or video element on this page.')
+  if (!newVideoId || !newVideoElement || !window.location.href.includes('youtube.com/watch')) {
+    if (saveInterval) {
+      clearInterval(saveInterval)
+      saveInterval = null
+    }
+
+    if (currentVideoId !== null) {
+      console.log('Navigated away from YouTube watch page or elements not found, stopping tracking.')
+      currentVideoId = null
+      currentVideoElement = null
+    }
+    initializationAttempts = 0 // Reset attempts if we're off YouTube
     return
   }
 
-  // Only re-initialize if the video ID has actually changed
-  if (newVideoId === currentVideoId) {
+  // If the video ID hasn't changed, and we're already tracking it, do nothing.
+  // This prevents redundant re-initializations for the same video.
+  if (newVideoId === currentVideoId && currentVideoElement === newVideoElement) {
+    initializationAttempts = 0 // Reset attempts as we are stable
     return
+  }
+
+  // Clear any existing interval and listeners for the *old* video/state
+  if (saveInterval) {
+    clearInterval(saveInterval)
+    saveInterval = null
   }
 
   currentVideoId = newVideoId
   currentVideoElement = newVideoElement
+  initializationAttempts = 0 // Reset attempts on successful (re)initialization
 
   // Initial attempt to load progress as soon as the video element is available
   // This is important because YouTube's player might already be loading data.
@@ -111,35 +128,52 @@ async function initializeVideoTracking() {
   })
 }
 
-// --- Observe URL Changes and DOM for Video Element ---
-
-// 1. Observe URL changes (YouTube doesn't trigger 'popstate' for internal navigation reliably)
-// MutationObserver on the title or body can indicate URL change.
-// A simpler way often used is to periodically check the URL or use specific YouTube events.
-let lastKnownUrl = window.location.href
-
-const urlChangeObserver = new MutationObserver(() => {
-  if (window.location.href !== lastKnownUrl) {
-    lastKnownUrl = window.location.href
-    // Check if it's still a YouTube watch page
-    if (lastKnownUrl.includes('youtube.com/watch')) {
-      // Give YouTube a moment to update the DOM with the new video player
-      setTimeout(initializeVideoTracking, 500) // Small delay
-    } else {
-      // If navigated away from YouTube watch page, stop tracking
-      if (saveInterval) {
-        clearInterval(saveInterval)
-        saveInterval = null
-      }
-      currentVideoId = null
-      currentVideoElement = null
-      console.log('Navigated away from YouTube watch page, stopping tracking.')
+// --- Resilient Initialization with Retries ---
+function attemptInitializationWithRetry() {
+  if (initializationAttempts < MAX_INITIALIZATION_ATTEMPTS) {
+    initializeVideoTracking()
+    initializationAttempts++
+    // If not yet tracking a video, retry shortly
+    if (currentVideoId === null || currentVideoElement === null) {
+      setTimeout(attemptInitializationWithRetry, INITIALIZATION_RETRY_DELAY)
     }
+  } else {
+    console.warn(`Stopped attempting initialization after ${MAX_INITIALIZATION_ATTEMPTS} attempts.`)
+  }
+}
+
+// --- Event Listeners for Page Navigation and Initial Load ---
+
+// 1. Listen for YouTube's own custom events (more reliable for SPA navigation)
+// YouTube often dispatches custom events when the page or video changes.
+// The `yt-navigate-finish` event is commonly used for this.
+document.addEventListener('yt-navigate-finish', () => {
+  console.log('yt-navigate-finish event detected. Attempting re-initialization.')
+  initializationAttempts = 0 // Reset attempts on navigation
+  setTimeout(attemptInitializationWithRetry, INITIALIZATION_RETRY_DELAY) // Add a small delay
+})
+
+// 2. Fallback: Listen for browser's popstate event (for back/forward button)
+window.addEventListener('popstate', () => {
+  // This fires on back/forward. Check if we're on a YouTube watch page.
+  if (window.location.href.includes('youtube.com/watch')) {
+    console.log('Popstate event detected. Attempting re-initialization.')
+    initializationAttempts = 0 // Reset attempts on navigation
+    setTimeout(attemptInitializationWithRetry, INITIALIZATION_RETRY_DELAY) // Add a small delay
   }
 })
 
-// Observe changes in the document title or body attributes, which often change with URL
-urlChangeObserver.observe(document.head, { childList: true, subtree: true, attributes: true, characterData: true })
-urlChangeObserver.observe(document.body, { childList: true, subtree: true, attributes: true })
+// 3. Initial load of the content script
+// This handles cases where the user opens a YouTube tab directly.
+console.log('Content script loaded. Initializing tracking...')
+initializationAttempts = 0 // Ensure attempts are reset on script load
+setTimeout(attemptInitializationWithRetry, 500) // Give the page a moment to render
 
-//initializeVideoTracking()
+// 4. Save progress on tab/window close
+window.addEventListener('beforeunload', async function () {
+  await saveCurrent()
+  if (saveInterval) {
+    clearInterval(saveInterval)
+    saveInterval = null
+  }
+})
