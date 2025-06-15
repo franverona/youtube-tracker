@@ -16,6 +16,7 @@ export async function saveProgress(videoId: string, progress: number) {
     title: getVideoTitle(),
     url: `https://www.youtube.com/watch?v=${videoId}`,
   }
+  console.log(`Saving interval for ${videoId}`, videoDetails)
   await videoStorage.save(videoId, videoDetails)
 }
 
