@@ -34,7 +34,7 @@ A Chrome and Firefox browser extension that automatically tracks your progress o
 
 #### Prerequisites
 
-- Node.js ≥22.15.1
+- Node.js ≥22.15.1 (use `.nvmrc`: `nvm use`)
 
 #### Setup
 
@@ -43,7 +43,10 @@ A Chrome and Firefox browser extension that automatically tracks your progress o
 git clone https://github.com/franverona/youtube-tracker.git
 cd youtube-tracker
 
-# Install dependencies
+# Use the correct Node version
+nvm use
+
+# Install dependencies (also sets up git hooks via husky)
 npm install
 
 # Start development mode (Chrome)
@@ -71,6 +74,9 @@ npm run zip:firefox      # Firefox
 
 # Type checking
 npm run type-check
+
+# Lint
+npm run lint
 ```
 
 ### Project Structure
@@ -103,6 +109,8 @@ youtube-tracker/
 - **Language**: TypeScript 5.8
 - **Styling**: Tailwind CSS 4
 - **Build Tool**: Vite (via WXT)
+- **Linting**: ESLint 9 with typescript-eslint, react-hooks, stylistic, and import plugins
+- **Git Hooks**: Husky — lint-staged on pre-commit, commitlint on commit-msg
 
 ### How It Works
 
@@ -149,8 +157,8 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes
-4. Run type checking (`npm run type-check`)
-5. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Run type checking and linting (`npm run type-check && npm run lint`)
+5. Commit using [Conventional Commits](https://www.conventionalcommits.org/) format (enforced automatically): `git commit -m 'feat: add amazing feature'`
 6. Push to the branch (`git push origin feature/amazing-feature`)
 7. Open a Pull Request
 
