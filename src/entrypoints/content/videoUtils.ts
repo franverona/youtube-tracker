@@ -2,7 +2,7 @@ import { videoStorage, type VideoDetails } from '../../storage/videoStorage'
 import { getVideoTitle } from './youtubeUtils'
 
 export async function saveProgress(videoId: string, progress: number) {
-  if (!videoId || progress === null) {
+  if (!videoId || isNaN(progress) || progress < 0) {
     console.warn('saveProgress: Missing video ID or current time.')
     return
   }
