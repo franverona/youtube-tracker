@@ -30,22 +30,20 @@ export async function loadProgress(videoId: string, videoElement: HTMLVideoEleme
   if (progress <= 0) return
 
   const trySetProgress = () => {
-    if (videoElement.readyState >= 2) {
-      if (videoElement.duration && videoElement.duration - progress < 5) {
-        return
-      }
+    if (videoElement.readyState < 2) return
 
-      videoElement.currentTime = progress
+    videoElement.removeEventListener('loadeddata', trySetProgress)
+    videoElement.removeEventListener('canplaythrough', trySetProgress)
+    videoElement.removeEventListener('loadedmetadata', trySetProgress)
 
-      if (videoElement.paused && progress > 1) {
-        videoElement.play().catch((e) => {
-          console.warn('loadProgress: Autoplay prevented:', e)
-        })
-      }
+    if (videoElement.duration && videoElement.duration - progress < 5) return
 
-      videoElement.removeEventListener('loadeddata', trySetProgress)
-      videoElement.removeEventListener('canplaythrough', trySetProgress)
-      videoElement.removeEventListener('loadedmetadata', trySetProgress)
+    videoElement.currentTime = progress
+
+    if (videoElement.paused && progress > 1) {
+      videoElement.play().catch((e) => {
+        console.warn('loadProgress: Autoplay prevented:', e)
+      })
     }
   }
 
