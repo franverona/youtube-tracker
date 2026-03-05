@@ -13,9 +13,23 @@ function formatTime(seconds: number) {
     .replace(/^0/, '')
 }
 
-function getThumbnail(id: string) {
-  return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`
+function timeAgo(timestamp: number) {
+  const diff = Date.now() - timestamp
+  const minutes = Math.floor(diff / 60000)
+  if (minutes < 1) return 'just now'
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  return `${days}d ago`
 }
+
+function getThumbnail(id: string) {
+  return `https://i.ytimg.com/vi/${id}/mqdefault.jpg`
+}
+
+// Approximation: YouTube videos rarely exceed 4 hours
+const MAX_VIDEO_DURATION = 4 * 60 * 60
 
 export default function App() {
   const videos = useVideoStorage()
@@ -26,40 +40,84 @@ export default function App() {
 
   if (sortedVideos.length === 0) {
     return (
-      <div className="App flex h-[360px] items-center justify-center">
-        <h3 className="text-xs font-medium uppercase text-gray-400">No videos has been tracked.</h3>
+      <div className="App flex h-[360px] flex-col items-center justify-center gap-2">
+        <svg className="text-gray-300" width="40" height="40" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" />
+        </svg>
+        <p className="text-sm text-gray-400">No videos tracked yet</p>
+        <p className="text-xs text-gray-300">Watch a YouTube video to get started</p>
       </div>
     )
   }
 
   return (
     <div className="App">
-      <h3 className="mb-4 border-b pb-2 text-xs font-medium uppercase">Saved Progress</h3>
-      {sortedVideos.map(({ id, progress, timestamp, title, url }) => (
-        <div key={id} className="mb-4 flex gap-4">
-          <img src={getThumbnail(id)} alt={`Thumbnail for ${title}`} className="h-[90px] w-auto" />
-          <div className="flex-1 truncate">
-            <p className="mb-1 truncate text-base font-semibold">{title}</p>
-            <p className="mb-1 text-blue-600 underline">
-              <a href={url} target="_blank" rel="noreferrer">
-                {url}
+      <div className="mb-3 flex items-center justify-between border-b border-gray-100 pb-2">
+        <h3 className="text-xs font-semibold tracking-widest text-gray-500 uppercase">Saved Progress</h3>
+        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+          {sortedVideos.length}
+        </span>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        {sortedVideos.map(({ id, progress, timestamp, title, url }) => {
+          const progressPercent = Math.min((progress / MAX_VIDEO_DURATION) * 100, 100)
+          return (
+            <div key={id} className="group flex gap-3 rounded-lg p-2 transition-colors hover:bg-gray-50">
+              {/* Thumbnail */}
+              <a href={url} target="_blank" rel="noreferrer" className="relative shrink-0">
+                <img
+                  src={getThumbnail(id)}
+                  alt={title}
+                  className="h-[63px] w-[112px] rounded object-cover"
+                />
+                <span className="absolute right-1 bottom-1 rounded bg-black/80 px-1 py-0.5 text-[10px] font-medium text-white">
+                  {formatTime(progress)}
+                </span>
               </a>
-            </p>
-            <div className="mb-1 flex gap-1">
-              <p>Progress: {formatTime(progress)}s</p>
-              <p>·</p>
-              <p>Last save: {new Date(timestamp).toLocaleString()}</p>
+
+              {/* Info */}
+              <div className="flex min-w-0 flex-1 flex-col justify-between">
+                <div>
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mb-1 line-clamp-2 text-sm leading-snug font-medium text-gray-900 hover:text-blue-600"
+                  >
+                    {title}
+                  </a>
+                </div>
+
+                {/* Progress bar */}
+                <div className="mb-1.5 h-1 w-full overflow-hidden rounded-full bg-gray-200">
+                  <div
+                    className="h-full rounded-full bg-red-500 transition-all"
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
+
+                {/* Footer */}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-400">{timeAgo(timestamp)}</span>
+                  <button
+                    onClick={() => videoStorage.remove(id)}
+                    className="rounded p-0.5 text-gray-400 opacity-0 transition-opacity hover:text-red-500 group-hover:opacity-100"
+                    title="Remove"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6l-1 14H6L5 6" />
+                      <path d="M10 11v6M14 11v6" />
+                      <path d="M9 6V4h6v2" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
             </div>
-            <p
-              className="inline cursor-pointer text-red-600 underline"
-              onClick={() => videoStorage.remove(id)}
-              aria-hidden
-            >
-              Remove
-            </p>
-          </div>
-        </div>
-      ))}
+          )
+        })}
+      </div>
     </div>
   )
 }
