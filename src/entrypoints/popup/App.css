@@ -1,0 +1,8 @@
+@import "tailwindcss";
+
+.App {
+  max-height: 360px;
+  min-width: 400px;
+  padding: 1rem;
+  overflow: auto;
+}
