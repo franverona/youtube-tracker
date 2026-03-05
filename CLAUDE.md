@@ -22,6 +22,7 @@ npm run zip               # Build and create a zip file for Chrome
 npm run zip:firefox       # Build and create a zip file for Firefox
 
 npm run type-check        # Run TypeScript type checking
+npm run lint              # Run ESLint on src/
 ```
 
 ## Architecture
@@ -86,12 +87,21 @@ Build outputs go to `.output/chrome-mv3/` and `.output/firefox-mv2/`.
 - Firefox builds use MV2 and automatically exclude Chrome-only manifest features
 - `wxt prepare` is run automatically via `postinstall`
 
+### Code Quality
+
+- **ESLint** (`eslint.config.js`) — flat config with `typescript-eslint`, `eslint-plugin-react-hooks`, `eslint-plugin-react`, `@stylistic/eslint-plugin`, and `eslint-plugin-import`
+- **lint-staged** — runs ESLint on staged `src/**/*.{ts,tsx}` files before each commit
+- **husky** — git hooks: `pre-commit` runs lint-staged, `commit-msg` runs commitlint
+- **commitlint** (`commitlint.config.js`) — enforces Conventional Commits format: `type(scope): description`
+  - Valid types: `feat`, `fix`, `chore`, `docs`, `style`, `refactor`, `test`, `ci`, etc.
+
 ### CI
 
 GitHub Actions runs on every push to `main` and on all pull requests (`.github/workflows/ci.yml`):
 1. `npm run type-check`
-2. `npm run build` (Chrome)
-3. `npm run build:firefox` (Firefox)
+2. `npm run lint`
+3. `npm run build` (Chrome)
+4. `npm run build:firefox` (Firefox)
 
 ## Development Notes
 
