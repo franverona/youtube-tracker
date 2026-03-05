@@ -30,7 +30,6 @@ export default defineContentScript({
           currentVideoId = null
           currentVideoElement = null
         }
-        initializationAttempts = 0
         return
       }
 
@@ -92,9 +91,9 @@ export default defineContentScript({
       currentVideoElement.addEventListener('loadedmetadata', setSaveInterval)
     }
 
-    function attemptInitializationWithRetry() {
+    async function attemptInitializationWithRetry() {
       if (initializationAttempts < MAX_INITIALIZATION_ATTEMPTS) {
-        initializeVideoTracking()
+        await initializeVideoTracking()
         initializationAttempts++
         if (currentVideoId === null || currentVideoElement === null) {
           setTimeout(attemptInitializationWithRetry, INITIALIZATION_RETRY_DELAY)
