@@ -99,8 +99,9 @@ Build outputs go to `.output/chrome-mv3/` and `.output/firefox-mv2/`.
 
 GitHub Actions runs on every push to `main` and on all pull requests (`.github/workflows/ci.yml`):
 1. `npm run type-check`
-2. `npm run build` (Chrome)
-3. `npm run build:firefox` (Firefox)
+2. `npm run lint`
+3. `npm run build` (Chrome)
+4. `npm run build:firefox` (Firefox)
 
 ## Development Notes
 
