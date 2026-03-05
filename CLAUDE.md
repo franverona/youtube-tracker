@@ -6,147 +6,111 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 YouTube Tracker is a Chrome/Firefox extension that tracks video progress on YouTube. It automatically saves where you left off in videos and resumes from that position when you return. The extension saves progress every 5 seconds for short videos (<15 min) and every 30 seconds for longer videos.
 
+Built with [WXT](https://wxt.dev) — a single-package setup with no monorepo.
+
 ## Development Commands
 
-### Initial Setup
 ```bash
-pnpm install                # Install dependencies
-pnpm copy-env              # Copy environment files (runs automatically after install)
-```
+npm install               # Install dependencies (also runs wxt prepare)
 
-### Development
-```bash
-pnpm dev                   # Build extension in development mode with watch
-pnpm dev:firefox          # Build for Firefox with watch
-```
+npm run dev               # Build Chrome extension in development mode with watch
+npm run dev:firefox       # Build for Firefox with watch
 
-### Building
-```bash
-pnpm build                # Build for Chrome (production)
-pnpm build:firefox        # Build for Firefox (production)
-pnpm zip                  # Build and create a zip file for Chrome
-pnpm zip:firefox          # Build and create a zip file for Firefox
-```
+npm run build             # Build for Chrome (production)
+npm run build:firefox     # Build for Firefox (production)
+npm run zip               # Build and create a zip file for Chrome
+npm run zip:firefox       # Build and create a zip file for Firefox
 
-### Code Quality
-```bash
-pnpm type-check           # Run TypeScript type checking across all packages
-pnpm lint                 # Run ESLint on all packages
-pnpm lint:fix             # Auto-fix linting issues
-pnpm format               # Format code with Prettier
-```
-
-### Testing
-```bash
-pnpm e2e                  # Run end-to-end tests (Chrome)
-pnpm e2e:firefox          # Run end-to-end tests (Firefox)
-```
-
-### Cleanup
-```bash
-pnpm clean:bundle         # Remove dist folders
-pnpm clean:turbo          # Remove Turbo cache
-pnpm clean:node_modules   # Remove all node_modules
-pnpm clean                # Full cleanup (all of the above)
-pnpm clean:install        # Clean and reinstall dependencies
+npm run type-check        # Run TypeScript type checking
 ```
 
 ## Architecture
 
-### Monorepo Structure
+### Project Structure
 
-This is a **pnpm workspace monorepo** using **Turborepo** for build orchestration. The workspace consists of:
+```
+src/
+  entrypoints/
+    content.ts              # Content script entry point (defineContentScript)
+    content/
+      videoUtils.ts         # saveProgress / loadProgress
+      youtubeUtils.ts       # getVideoId / getVideoElement / getVideoTitle
+    popup/
+      index.html
+      main.tsx              # React root
+      App.tsx               # Popup UI component
+      App.css               # Tailwind CSS import + popup styles
+      useVideoStorage.ts    # React hook for live storage updates
+  storage/
+    videoStorage.ts         # videoStorageItem (WXT storage) + videoStorage helpers
+public/
+  icon-48.png
+  icon-128.png
+wxt.config.ts               # WXT config: srcDir, React module, Tailwind, manifest
+tsconfig.json               # Extends .wxt/tsconfig.json after wxt prepare
+```
 
-- **`chrome-extension/`** - Core extension configuration (manifest, public assets, background script)
-- **`pages/`** - Extension pages as separate packages
-- **`packages/`** - Shared libraries and utilities
-- **`tests/`** - E2E tests
-
-### Key Packages
-
-#### Extension Pages (`pages/`)
-- **`content`** - Content script that runs on YouTube watch pages. Contains the core tracking logic in `pages/content/src/matches/youtube/index.ts`
-- **`popup`** - React-based popup UI shown when clicking the extension icon
-- **`options`** - Options/settings page
-- **`side-panel`** - Side panel interface
-- **`devtools`** - DevTools integration
-- **`content-ui`** - UI components injected into content pages
-- **`content-runtime`** - Runtime utilities for content scripts
-
-#### Shared Packages (`packages/`)
-- **`storage`** - Chrome storage abstraction layer with type-safe APIs. Exports `videoStorage` for managing video progress state
-- **`shared`** - Common utilities and types shared across the extension
-- **`ui`** - Reusable React components and UI utilities
-- **`i18n`** - Internationalization support
-- **`env`** - Environment variable management
-- **`hmr`** - Hot Module Replacement support for development
-- **`vite-config`** - Shared Vite configuration
-- **`tailwindcss-config`** - Shared Tailwind CSS configuration
-- **`tsconfig`** - Shared TypeScript configurations
-- **`dev-utils`** - Development utilities
-- **`module-manager`** - Module management utilities
-- **`zipper`** - Creates distribution zip files
+Build outputs go to `.output/chrome-mv3/` and `.output/firefox-mv2/`.
 
 ### Video Tracking Flow
 
-1. **Content Script Initialization** (`pages/content/src/matches/youtube/index.ts`):
-   - Detects YouTube watch pages via `content_scripts` manifest configuration
+1. **Content Script Initialization** (`src/entrypoints/content.ts`):
+   - Defined via `defineContentScript` with `matches: ['*://*.youtube.com/watch*']`
    - Listens for YouTube SPA navigation events (`yt-navigate-finish`, `popstate`)
    - Implements retry logic to handle race conditions with YouTube's dynamic page loading
 
 2. **Progress Tracking**:
    - Extracts video ID from URL and locates video element in DOM
-   - Loads saved progress from Chrome storage via `videoStorage.getById()`
+   - Loads saved progress from storage via `videoStorage.getById()`
    - Sets video `currentTime` to resume from last position
    - Saves progress periodically (5s for short videos, 30s for long videos) when playing
    - Saves immediately on pause, video end, or page unload
 
-3. **Storage Layer** (`packages/storage/lib/impl/videoStorage.ts`):
-   - Uses Chrome's local storage API wrapped in a type-safe abstraction
-   - Stores video progress indexed by video ID
+3. **Storage Layer** (`src/storage/videoStorage.ts`):
+   - Uses `wxt/utils/storage` — `storage.defineItem<VideoStateType>('local:video-storage')`
+   - `videoStorageItem` is the raw WXT storage item (used for `.watch()` in the popup hook)
+   - `videoStorage` is a convenience wrapper with `getById`, `save`, `remove`
    - Each entry contains: `id`, `progress` (currentTime in seconds), `timestamp`, `title`, `url`
-   - Implements live update functionality for real-time state synchronization
 
-4. **UI Components**:
-   - Popup displays tracked videos with progress information
-   - Built with React 19 and styled with Tailwind CSS
-   - Uses workspace packages for consistent UI across extension pages
+4. **Popup UI** (`src/entrypoints/popup/`):
+   - React 19 component displaying tracked videos sorted by timestamp
+   - `useVideoStorage` hook subscribes to live storage changes via `videoStorageItem.watch()`
+   - Styled with Tailwind CSS v4
 
 ### Build System
 
-- **Vite** for bundling with specialized configurations per package
-- **Turborepo** manages task dependencies and caching across packages
-- **TypeScript** with strict mode enabled
-- Manifest is generated from `chrome-extension/manifest.ts` at build time
-- Firefox builds automatically remove incompatible features (e.g., `sidePanel`) via manifest parser
+- **WXT** orchestrates the entire build — no Turborepo, no pnpm workspaces
+- **Vite** (via WXT) handles bundling
+- **Tailwind CSS v4** configured via `@tailwindcss/vite` plugin in `wxt.config.ts`
+- **TypeScript** with strict mode; `.wxt/tsconfig.json` is auto-generated by `wxt prepare`
+- Firefox builds use MV2 and automatically exclude Chrome-only manifest features
+- `wxt prepare` is run automatically via `postinstall`
 
-### Environment Variables
+### CI
 
-Environment variables are defined in `.env` and copied to packages via `bash-scripts/copy_env.sh`:
-- `CLI_CEB_DEV` - Development mode flag (set via `pnpm dev`)
-- `CLI_CEB_FIREFOX` - Firefox build flag (set via `pnpm dev:firefox`)
-- `CEB_*` - Custom environment variables accessible across packages
+GitHub Actions runs on every push to `main` and on all pull requests (`.github/workflows/ci.yml`):
+1. `npm run type-check`
+2. `npm run build` (Chrome)
+3. `npm run build:firefox` (Firefox)
 
 ## Development Notes
 
 ### Working with Content Scripts
 - Content scripts have access to the page DOM but run in an isolated JavaScript context
-- The main tracking logic is in `pages/content/src/matches/youtube/index.ts`
-- Video detection utilities are in `pages/content/src/matches/youtube/utils/`
-- Content scripts are built as IIFE bundles for proper isolation
+- The main entry point is `src/entrypoints/content.ts` using `defineContentScript` (WXT auto-import)
+- DOM helpers are in `src/entrypoints/content/youtubeUtils.ts`
+- Storage helpers are in `src/entrypoints/content/videoUtils.ts`
 
 ### Working with Storage
-- Always use the `videoStorage` API from `@extension/storage` rather than raw Chrome APIs
+- Use `videoStorage` from `src/storage/videoStorage.ts` for read/write operations
+- Use `videoStorageItem` directly when you need to subscribe to changes (`.watch()`)
 - Storage operations are async and return Promises
-- Use `videoStorage.save(id, details)` to persist video progress
-- Use `videoStorage.getById(id)` to retrieve specific video data
 
 ### Multi-Browser Support
-- Chrome and Firefox use different build outputs
-- Firefox-specific builds exclude unsupported manifest features
-- Test both browsers using separate commands (`pnpm dev` vs `pnpm dev:firefox`)
+- Chrome builds target MV3, Firefox targets MV2 — WXT handles this automatically
+- Test both browsers using `npm run dev` vs `npm run dev:firefox`
+- Build outputs are in `.output/chrome-mv3/` and `.output/firefox-mv2/`
 
 ### Hot Module Replacement
-- Development mode includes HMR for faster iteration
-- Changes to content scripts require manual extension reload in browser
-- Changes to popup/options pages hot-reload automatically
+- Development mode includes HMR for the popup (changes reflect immediately)
+- Changes to content scripts require manually reloading the extension in the browser

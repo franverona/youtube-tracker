@@ -35,7 +35,6 @@ A Chrome and Firefox browser extension that automatically tracks your progress o
 #### Prerequisites
 
 - Node.js ≥22.15.1
-- pnpm 10.11.0 (will be used automatically via `packageManager` field)
 
 #### Setup
 
@@ -45,75 +44,65 @@ git clone https://github.com/franverona/youtube-tracker.git
 cd youtube-tracker
 
 # Install dependencies
-pnpm install
+npm install
 
-# Start development mode
-pnpm dev
+# Start development mode (Chrome)
+npm run dev
 ```
 
-The extension will be built to the `dist/` directory. Load the unpacked extension from there.
+The extension will be built to the `.output/chrome-mv3/` directory. Load the unpacked extension from there.
 
 ## Development
 
 ### Available Commands
 
 ```bash
-# Development (Chrome with hot reload)
-pnpm dev
-
-# Development (Firefox)
-pnpm dev:firefox
+# Development (with hot reload)
+npm run dev              # Chrome
+npm run dev:firefox      # Firefox
 
 # Build for production
-pnpm build              # Chrome
-pnpm build:firefox      # Firefox
+npm run build            # Chrome
+npm run build:firefox    # Firefox
 
 # Create distributable ZIP files
-pnpm zip               # Chrome
-pnpm zip:firefox       # Firefox
+npm run zip              # Chrome
+npm run zip:firefox      # Firefox
 
-# Code quality
-pnpm type-check        # TypeScript type checking
-pnpm lint              # ESLint
-pnpm lint:fix          # Auto-fix linting issues
-pnpm format            # Format with Prettier
-
-# Testing
-pnpm e2e               # Run E2E tests (Chrome)
-pnpm e2e:firefox       # Run E2E tests (Firefox)
-
-# Cleanup
-pnpm clean             # Remove all build artifacts and dependencies
-pnpm clean:install     # Clean reinstall of dependencies
+# Type checking
+npm run type-check
 ```
 
 ### Project Structure
 
 ```
 youtube-tracker/
-├── chrome-extension/   # Core extension config and manifest
-├── pages/             # Extension UI pages
-│   ├── content/       # Content script (YouTube tracking logic)
-│   ├── popup/         # Extension popup UI
-│   ├── options/       # Options page
-│   ├── side-panel/    # Side panel UI
-│   └── ...
-├── packages/          # Shared libraries
-│   ├── storage/       # Chrome storage abstraction
-│   ├── ui/            # Reusable React components
-│   ├── shared/        # Common utilities
-│   └── ...
-└── tests/            # E2E tests
+├── src/
+│   ├── entrypoints/
+│   │   ├── content.ts          # Content script (YouTube tracking logic)
+│   │   ├── content/
+│   │   │   ├── videoUtils.ts   # Save/load progress helpers
+│   │   │   └── youtubeUtils.ts # DOM helpers (video element, title, ID)
+│   │   └── popup/
+│   │       ├── index.html
+│   │       ├── main.tsx
+│   │       ├── App.tsx         # Popup UI
+│   │       ├── App.css
+│   │       └── useVideoStorage.ts
+│   └── storage/
+│       └── videoStorage.ts     # Storage abstraction (wxt/utils/storage)
+├── public/
+│   ├── icon-48.png
+│   └── icon-128.png
+└── wxt.config.ts
 ```
 
 ### Tech Stack
 
-- **Framework**: React 19
-- **Build Tool**: Vite 6
-- **Monorepo**: pnpm workspaces + Turborepo
+- **Framework**: [WXT](https://wxt.dev) + React 19
 - **Language**: TypeScript 5.8
-- **Styling**: Tailwind CSS 3
-- **Extension API**: webextension-polyfill
+- **Styling**: Tailwind CSS 4
+- **Build Tool**: Vite (via WXT)
 
 ### How It Works
 
@@ -160,7 +149,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes
-4. Run tests and linting (`pnpm type-check && pnpm lint`)
+4. Run type checking (`npm run type-check`)
 5. Commit your changes (`git commit -m 'Add amazing feature'`)
 6. Push to the branch (`git push origin feature/amazing-feature`)
 7. Open a Pull Request
