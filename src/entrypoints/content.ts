@@ -113,14 +113,6 @@ export default defineContentScript({
       }
     })
 
-    window.addEventListener('beforeunload', async () => {
-      await saveCurrent()
-      if (saveInterval) {
-        clearInterval(saveInterval)
-        saveInterval = null
-      }
-    })
-
     setTimeout(attemptInitializationWithRetry, 500)
   },
 })
