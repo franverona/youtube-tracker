@@ -1,28 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { trackingEnabledItem, videoStorage } from '../../storage/videoStorage'
+import { formatTime, timeAgo } from '../../utils'
 import { useVideoStorage } from './useVideoStorage'
-
-function formatTime(seconds: number) {
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  const s = Math.floor(seconds % 60)
-  return [h, m, s]
-    .map((v) => (v < 10 ? '0' + v : v))
-    .filter((v, i) => v !== '00' || i > 0)
-    .join(':')
-    .replace(/^0/, '')
-}
-
-function timeAgo(timestamp: number) {
-  const diff = Date.now() - timestamp
-  const minutes = Math.floor(diff / 60000)
-  if (minutes < 1) return 'just now'
-  if (minutes < 60) return `${minutes}m ago`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
-  const days = Math.floor(hours / 24)
-  return `${days}d ago`
-}
 
 function getThumbnail(id: string) {
   return `https://i.ytimg.com/vi/${id}/mqdefault.jpg`
@@ -61,6 +40,16 @@ export default function App() {
           <span className={`inline-block h-3 w-3 rounded-full bg-white shadow transition-transform ${trackingEnabled ? 'translate-x-3.5' : 'translate-x-0.5'}`} />
         </span>
         {trackingEnabled ? 'Tracking' : 'Paused'}
+      </button>
+      <button
+        onClick={() => browser.tabs.create({ url: browser.runtime.getURL('/options.html') })}
+        className="rounded p-1 text-gray-400 transition-colors hover:text-gray-600"
+        title="Settings"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="3" />
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+        </svg>
       </button>
     </div>
   )
