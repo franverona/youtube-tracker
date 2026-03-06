@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
-import { videoStorage } from '../../storage/videoStorage'
+import { useEffect, useMemo, useState } from 'react'
+import { trackingEnabledItem, videoStorage } from '../../storage/videoStorage'
 import { useVideoStorage } from './useVideoStorage'
 
 function formatTime(seconds: number) {
@@ -31,28 +31,60 @@ function getThumbnail(id: string) {
 const FALLBACK_VIDEO_DURATION = 4 * 60 * 60
 
 export default function App() {
+  const [trackingEnabled, setTrackingEnabled] = useState(true)
+
+  useEffect(() => {
+    trackingEnabledItem.getValue().then(setTrackingEnabled)
+    return trackingEnabledItem.watch(setTrackingEnabled)
+  }, [])
+
+  function toggleTracking() {
+    const next = !trackingEnabled
+    setTrackingEnabled(next)
+    trackingEnabledItem.setValue(next)
+  }
+
   const videos = useVideoStorage()
   const sortedVideos = useMemo(
     () => (videos ? Object.values(videos).sort((a, b) => b.timestamp - a.timestamp) : null),
     [videos],
   )
 
+  const trackingToggle = (
+    <div className="mb-3 flex items-center justify-between border-b border-gray-100 pb-2">
+      <button
+        onClick={toggleTracking}
+        className={`flex items-center gap-2 text-xs font-medium transition-colors ${trackingEnabled ? 'text-gray-500 hover:text-gray-700' : 'text-amber-500 hover:text-amber-600'}`}
+        title={trackingEnabled ? 'Pause tracking' : 'Resume tracking'}
+      >
+        <span className={`relative inline-flex h-4 w-7 shrink-0 items-center rounded-full transition-colors ${trackingEnabled ? 'bg-red-500' : 'bg-gray-300'}`}>
+          <span className={`inline-block h-3 w-3 rounded-full bg-white shadow transition-transform ${trackingEnabled ? 'translate-x-3.5' : 'translate-x-0.5'}`} />
+        </span>
+        {trackingEnabled ? 'Tracking' : 'Paused'}
+      </button>
+    </div>
+  )
+
   if (!sortedVideos) return null
 
   if (sortedVideos.length === 0) {
     return (
-      <div className="App flex h-[360px] flex-col items-center justify-center gap-2">
-        <svg className="text-gray-300" width="40" height="40" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" />
-        </svg>
-        <p className="text-sm text-gray-400">No videos tracked yet</p>
-        <p className="text-xs text-gray-300">Watch a YouTube video to get started</p>
+      <div className="App flex h-[360px] flex-col items-start justify-start">
+        {trackingToggle}
+        <div className="flex flex-1 w-full flex-col items-center justify-center gap-2">
+          <svg className="text-gray-300" width="40" height="40" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" />
+          </svg>
+          <p className="text-sm text-gray-400">No videos tracked yet</p>
+          <p className="text-xs text-gray-300">Watch a YouTube video to get started</p>
+        </div>
       </div>
     )
   }
 
   return (
     <div className="App">
+      {trackingToggle}
       <div className="mb-3 flex items-center justify-between border-b border-gray-100 pb-2">
         <h3 className="text-xs font-semibold tracking-widest text-gray-500 uppercase">Saved Progress</h3>
         <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">

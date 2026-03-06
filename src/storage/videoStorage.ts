@@ -15,6 +15,10 @@ export const videoStorageItem = storage.defineItem<VideoStateType>('local:video-
   defaultValue: {},
 })
 
+export const trackingEnabledItem = storage.defineItem<boolean>('local:tracking-enabled', {
+  defaultValue: true,
+})
+
 export const videoStorage = {
   getById: async (id: string): Promise<VideoDetails | undefined> => {
     const state = await videoStorageItem.getValue()

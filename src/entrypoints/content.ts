@@ -1,10 +1,14 @@
-import { videoStorage } from '../storage/videoStorage'
+import { trackingEnabledItem, videoStorage } from '../storage/videoStorage'
 import { loadProgress, saveProgress } from './content/videoUtils'
 import { getVideoElement, getVideoId } from './content/youtubeUtils'
 
 export default defineContentScript({
   matches: ['*://*.youtube.com/watch*'],
   main() {
+    let isTrackingEnabled = true
+    trackingEnabledItem.getValue().then((v) => { isTrackingEnabled = v })
+    trackingEnabledItem.watch((v) => { isTrackingEnabled = v })
+
     let currentVideoId: string | null = null
     let currentVideoElement: HTMLVideoElement | null = null
     let saveInterval: ReturnType<typeof setInterval> | null = null
@@ -29,7 +33,7 @@ export default defineContentScript({
     }
 
     async function saveCurrent() {
-      if (!currentVideoId || !currentVideoElement) return
+      if (!isTrackingEnabled || !currentVideoId || !currentVideoElement) return
       await saveProgress(currentVideoId, currentVideoElement.currentTime, currentVideoElement.duration)
     }
 
@@ -59,7 +63,9 @@ export default defineContentScript({
       videoListenerController = new AbortController()
       const { signal } = videoListenerController
 
-      await loadProgress(currentVideoId, currentVideoElement)
+      if (isTrackingEnabled) {
+        await loadProgress(currentVideoId, currentVideoElement)
+      }
 
       const setSaveInterval = () => {
         clearSaveInterval()
