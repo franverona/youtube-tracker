@@ -12,6 +12,13 @@ export default defineContentScript({
     const MAX_INITIALIZATION_ATTEMPTS = 20
     const INITIALIZATION_RETRY_DELAY = 500
 
+    function teardown() {
+      if (saveInterval) {
+        clearInterval(saveInterval)
+        saveInterval = null
+      }
+    }
+
     async function saveCurrent() {
       if (!currentVideoId || !currentVideoElement) return
       await saveProgress(currentVideoId, currentVideoElement.currentTime)
@@ -22,10 +29,7 @@ export default defineContentScript({
       const newVideoElement = getVideoElement()
 
       if (!newVideoId || !newVideoElement || !window.location.href.includes('youtube.com/watch')) {
-        if (saveInterval) {
-          clearInterval(saveInterval)
-          saveInterval = null
-        }
+        teardown()
         if (currentVideoId !== null) {
           currentVideoId = null
           currentVideoElement = null
@@ -38,10 +42,7 @@ export default defineContentScript({
         return
       }
 
-      if (saveInterval) {
-        clearInterval(saveInterval)
-        saveInterval = null
-      }
+      teardown()
 
       currentVideoId = newVideoId
       currentVideoElement = newVideoElement
@@ -55,10 +56,7 @@ export default defineContentScript({
       })
 
       const setSaveInterval = () => {
-        if (saveInterval) {
-          clearInterval(saveInterval)
-          saveInterval = null
-        }
+        teardown()
         if (!currentVideoId || !currentVideoElement) return
 
         const durationInSeconds = currentVideoElement.duration
@@ -75,18 +73,12 @@ export default defineContentScript({
       })
 
       currentVideoElement.addEventListener('pause', async () => {
-        if (saveInterval) {
-          clearInterval(saveInterval)
-          saveInterval = null
-        }
+        teardown()
         await saveCurrent()
       })
 
       currentVideoElement.addEventListener('ended', async () => {
-        if (saveInterval) {
-          clearInterval(saveInterval)
-          saveInterval = null
-        }
+        teardown()
         if (currentVideoId) {
           await videoStorage.remove(currentVideoId)
         }
