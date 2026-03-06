@@ -28,8 +28,7 @@ function getThumbnail(id: string) {
   return `https://i.ytimg.com/vi/${id}/mqdefault.jpg`
 }
 
-// Approximation: YouTube videos rarely exceed 4 hours
-const MAX_VIDEO_DURATION = 4 * 60 * 60
+const FALLBACK_VIDEO_DURATION = 4 * 60 * 60
 
 export default function App() {
   const videos = useVideoStorage()
@@ -62,8 +61,8 @@ export default function App() {
       </div>
 
       <div className="flex flex-col gap-3">
-        {sortedVideos.map(({ id, progress, timestamp, title, url }) => {
-          const progressPercent = Math.min((progress / MAX_VIDEO_DURATION) * 100, 100)
+        {sortedVideos.map(({ id, progress, duration, timestamp, title, url }) => {
+          const progressPercent = Math.min((progress / (duration ?? FALLBACK_VIDEO_DURATION)) * 100, 100)
           return (
             <div key={id} className="group flex gap-3 rounded-lg p-2 transition-colors hover:bg-gray-50">
               {/* Thumbnail */}

@@ -30,7 +30,7 @@ export default defineContentScript({
 
     async function saveCurrent() {
       if (!currentVideoId || !currentVideoElement) return
-      await saveProgress(currentVideoId, currentVideoElement.currentTime)
+      await saveProgress(currentVideoId, currentVideoElement.currentTime, currentVideoElement.duration)
     }
 
     async function initializeVideoTracking() {

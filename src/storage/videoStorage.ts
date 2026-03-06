@@ -3,6 +3,7 @@ import { storage } from 'wxt/utils/storage'
 export interface VideoDetails {
   id: string
   progress: number
+  duration?: number
   timestamp: number
   title: string
   url: string
