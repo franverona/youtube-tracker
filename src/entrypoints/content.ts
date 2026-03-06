@@ -109,5 +109,9 @@ export default defineContentScript({
         setTimeout(attemptInitializationWithRetry, INITIALIZATION_RETRY_DELAY)
       }
     })
+
+    // Handle the case where yt-navigate-finish already fired before this listener
+    // was registered (e.g. fresh tab, hard reload, or slow extension injection).
+    attemptInitializationWithRetry()
   },
 })
