@@ -8,14 +8,23 @@ export default defineContentScript({
     let currentVideoId: string | null = null
     let currentVideoElement: HTMLVideoElement | null = null
     let saveInterval: ReturnType<typeof setInterval> | null = null
+    let videoListenerController: AbortController | null = null
     let initializationAttempts = 0
     const MAX_INITIALIZATION_ATTEMPTS = 20
     const INITIALIZATION_RETRY_DELAY = 500
 
-    function teardown() {
+    function clearSaveInterval() {
       if (saveInterval) {
         clearInterval(saveInterval)
         saveInterval = null
+      }
+    }
+
+    function teardown() {
+      clearSaveInterval()
+      if (videoListenerController) {
+        videoListenerController.abort()
+        videoListenerController = null
       }
     }
 
@@ -47,11 +56,13 @@ export default defineContentScript({
       currentVideoId = newVideoId
       currentVideoElement = newVideoElement
       initializationAttempts = 0
+      videoListenerController = new AbortController()
+      const { signal } = videoListenerController
 
       await loadProgress(currentVideoId, currentVideoElement)
 
       const setSaveInterval = () => {
-        teardown()
+        clearSaveInterval()
         if (!currentVideoId || !currentVideoElement) return
 
         const durationInSeconds = currentVideoElement.duration
@@ -63,23 +74,18 @@ export default defineContentScript({
         }, currentSaveDelay)
       }
 
-      currentVideoElement.addEventListener('play', () => {
-        setSaveInterval()
-      })
-
+      currentVideoElement.addEventListener('play', () => setSaveInterval(), { signal })
       currentVideoElement.addEventListener('pause', async () => {
-        teardown()
+        clearSaveInterval()
         await saveCurrent()
-      })
-
+      }, { signal })
       currentVideoElement.addEventListener('ended', async () => {
-        teardown()
+        clearSaveInterval()
         if (currentVideoId) {
           await videoStorage.remove(currentVideoId)
         }
-      })
-
-      currentVideoElement.addEventListener('loadedmetadata', setSaveInterval)
+      }, { signal })
+      currentVideoElement.addEventListener('loadedmetadata', setSaveInterval, { signal })
     }
 
     async function attemptInitializationWithRetry() {
