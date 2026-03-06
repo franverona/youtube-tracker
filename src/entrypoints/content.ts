@@ -109,7 +109,5 @@ export default defineContentScript({
         setTimeout(attemptInitializationWithRetry, INITIALIZATION_RETRY_DELAY)
       }
     })
-
-    setTimeout(attemptInitializationWithRetry, 500)
   },
 })
