@@ -21,6 +21,7 @@ npm run build:firefox     # Build for Firefox (production)
 npm run zip               # Build and create a zip file for Chrome
 npm run zip:firefox       # Build and create a zip file for Firefox
 
+npm run test              # Run unit tests with Vitest
 npm run type-check        # Run TypeScript type checking
 npm run lint              # Run ESLint on src/
 ```
@@ -35,7 +36,9 @@ src/
     content.ts              # Content script entry point (defineContentScript)
     content/
       videoUtils.ts         # saveProgress / loadProgress
+      videoUtils.test.ts
       youtubeUtils.ts       # getVideoId / getVideoElement / getVideoTitle
+      youtubeUtils.test.ts
     popup/
       index.html
       main.tsx              # React root
@@ -44,6 +47,9 @@ src/
       useVideoStorage.ts    # React hook for live storage updates
   storage/
     videoStorage.ts         # videoStorageItem (WXT storage) + videoStorage helpers
+    videoStorage.test.ts
+  test/
+    setup.ts                # Vitest global setup (suppresses console.warn)
 public/
   icon-48.png
   icon-128.png
@@ -95,13 +101,22 @@ Build outputs go to `.output/chrome-mv3/` and `.output/firefox-mv2/`.
 - **commitlint** (`commitlint.config.js`) — enforces Conventional Commits format: `type(scope): description`
   - Valid types: `feat`, `fix`, `chore`, `docs`, `style`, `refactor`, `test`, `ci`, etc.
 
+### Testing
+
+- **Vitest** (`vitest.config.ts`) — unit tests run with `npm run test`
+- **jsdom** environment — DOM APIs are available in tests without a browser
+- Test files live alongside the source files they test (`*.test.ts`)
+- `src/test/setup.ts` is the global setup file (currently suppresses `console.warn`)
+- `wxt/utils/storage` must be mocked in tests because it relies on the browser extension runtime
+
 ### CI
 
 GitHub Actions runs on every push to `main` and on all pull requests (`.github/workflows/ci.yml`):
-1. `npm run type-check`
-2. `npm run lint`
-3. `npm run build` (Chrome)
-4. `npm run build:firefox` (Firefox)
+1. `npm run test`
+2. `npm run type-check`
+3. `npm run lint`
+4. `npm run build` (Chrome)
+5. `npm run build:firefox` (Firefox)
 
 ## Development Notes
 

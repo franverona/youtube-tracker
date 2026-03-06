@@ -72,6 +72,9 @@ npm run build:firefox    # Firefox
 npm run zip              # Chrome
 npm run zip:firefox      # Firefox
 
+# Run tests
+npm run test
+
 # Type checking
 npm run type-check
 
@@ -87,16 +90,21 @@ youtube-tracker/
 │   ├── entrypoints/
 │   │   ├── content.ts          # Content script (YouTube tracking logic)
 │   │   ├── content/
-│   │   │   ├── videoUtils.ts   # Save/load progress helpers
-│   │   │   └── youtubeUtils.ts # DOM helpers (video element, title, ID)
+│   │   │   ├── videoUtils.ts        # Save/load progress helpers
+│   │   │   ├── videoUtils.test.ts
+│   │   │   ├── youtubeUtils.ts      # DOM helpers (video element, title, ID)
+│   │   │   └── youtubeUtils.test.ts
 │   │   └── popup/
 │   │       ├── index.html
 │   │       ├── main.tsx
 │   │       ├── App.tsx         # Popup UI
 │   │       ├── App.css
 │   │       └── useVideoStorage.ts
-│   └── storage/
-│       └── videoStorage.ts     # Storage abstraction (wxt/utils/storage)
+│   ├── storage/
+│   │   ├── videoStorage.ts     # Storage abstraction (wxt/utils/storage)
+│   │   └── videoStorage.test.ts
+│   └── test/
+│       └── setup.ts            # Vitest global setup (suppress console.warn)
 ├── public/
 │   ├── icon-48.png
 │   └── icon-128.png
@@ -109,6 +117,7 @@ youtube-tracker/
 - **Language**: TypeScript 5.8
 - **Styling**: Tailwind CSS 4
 - **Build Tool**: Vite (via WXT)
+- **Testing**: Vitest with jsdom environment
 - **Linting**: ESLint 9 with typescript-eslint, react-hooks, stylistic, and import plugins
 - **Git Hooks**: Husky — lint-staged on pre-commit, commitlint on commit-msg
 
