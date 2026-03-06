@@ -50,11 +50,6 @@ export default defineContentScript({
 
       await loadProgress(currentVideoId, currentVideoElement)
 
-      currentVideoElement.addEventListener('loadedmetadata', async () => {
-        if (!currentVideoId || !currentVideoElement) return
-        await loadProgress(currentVideoId, currentVideoElement)
-      })
-
       const setSaveInterval = () => {
         teardown()
         if (!currentVideoId || !currentVideoElement) return
