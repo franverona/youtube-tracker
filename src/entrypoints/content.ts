@@ -92,6 +92,10 @@ export default defineContentScript({
         }
       }, { signal })
       currentVideoElement.addEventListener('loadedmetadata', setSaveInterval, { signal })
+
+      if (!currentVideoElement.paused) {
+        setSaveInterval()
+      }
     }
 
     async function attemptInitializationWithRetry() {
