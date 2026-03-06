@@ -55,6 +55,10 @@ export default defineContentScript({
       })
 
       const setSaveInterval = () => {
+        if (saveInterval) {
+          clearInterval(saveInterval)
+          saveInterval = null
+        }
         if (!currentVideoId || !currentVideoElement) return
 
         const durationInSeconds = currentVideoElement.duration
