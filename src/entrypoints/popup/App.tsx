@@ -34,9 +34,11 @@ const MAX_VIDEO_DURATION = 4 * 60 * 60
 export default function App() {
   const videos = useVideoStorage()
   const sortedVideos = useMemo(
-    () => Object.values(videos).sort((a, b) => b.timestamp - a.timestamp),
+    () => (videos ? Object.values(videos).sort((a, b) => b.timestamp - a.timestamp) : null),
     [videos],
   )
+
+  if (!sortedVideos) return null
 
   if (sortedVideos.length === 0) {
     return (
