@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
-import { videoStorage, videoStorageItem } from '../../storage/videoStorage'
+import { useRef, useMemo, useState } from 'react'
+import { type VideoStateType, videoStorage, videoStorageItem } from '../../storage/videoStorage'
 import { formatTime, timeAgo } from '../../utils'
 import { useVideoStorage } from '../popup/useVideoStorage'
 
@@ -9,15 +9,67 @@ function getThumbnail(id: string) {
 
 const FALLBACK_VIDEO_DURATION = 4 * 60 * 60
 
+function isValidVideoState(data: unknown): data is VideoStateType {
+  if (typeof data !== 'object' || data === null || Array.isArray(data)) return false
+  return Object.values(data).every(
+    (entry) =>
+      typeof entry === 'object' &&
+      entry !== null &&
+      typeof (entry as Record<string, unknown>).id === 'string' &&
+      typeof (entry as Record<string, unknown>).progress === 'number' &&
+      typeof (entry as Record<string, unknown>).timestamp === 'number' &&
+      typeof (entry as Record<string, unknown>).title === 'string' &&
+      typeof (entry as Record<string, unknown>).url === 'string',
+  )
+}
+
 export default function App() {
   const videos = useVideoStorage()
   const sortedVideos = useMemo(
     () => (videos ? Object.values(videos).sort((a, b) => b.timestamp - a.timestamp) : null),
     [videos],
   )
+  const [importStatus, setImportStatus] = useState<{ ok: boolean, message: string } | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   async function clearAll() {
     await videoStorageItem.setValue({})
+  }
+
+  async function exportData() {
+    const state = await videoStorageItem.getValue()
+    const json = JSON.stringify(state, null, 2)
+    const date = new Date().toISOString().slice(0, 10)
+    const a = document.createElement('a')
+    a.href = `data:application/json;charset=utf-8,${encodeURIComponent(json)}`
+    a.download = `youtube-tracker-backup-${date}.json`
+    a.click()
+  }
+
+  function handleImportClick() {
+    fileInputRef.current?.click()
+  }
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    // Reset so the same file can be re-imported if needed
+    e.target.value = ''
+
+    try {
+      const text = await file.text()
+      const parsed: unknown = JSON.parse(text)
+      if (!isValidVideoState(parsed)) {
+        setImportStatus({ ok: false, message: 'Invalid file format.' })
+        return
+      }
+      const current = await videoStorageItem.getValue()
+      await videoStorageItem.setValue({ ...current, ...parsed })
+      const count = Object.keys(parsed).length
+      setImportStatus({ ok: true, message: `Imported ${count} video${count !== 1 ? 's' : ''}.` })
+    } catch {
+      setImportStatus({ ok: false, message: 'Failed to read file.' })
+    }
   }
 
   if (!sortedVideos) return null
@@ -26,14 +78,34 @@ export default function App() {
     <div className="mx-auto max-w-4xl p-8">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold text-gray-900">Tracked Videos</h1>
-        {sortedVideos.length > 0 && (
+        <div className="flex items-center gap-2">
+          {importStatus && (
+            <span className={`text-sm ${importStatus.ok ? 'text-green-600' : 'text-red-600'}`}>
+              {importStatus.message}
+            </span>
+          )}
+          <input ref={fileInputRef} type="file" accept=".json" className="hidden" onChange={handleFileChange} />
           <button
-            onClick={clearAll}
-            className="rounded-md bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-100"
+            onClick={handleImportClick}
+            className="rounded-md bg-gray-50 px-3 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100"
           >
-            Clear all
+            Import
           </button>
-        )}
+          <button
+            onClick={exportData}
+            className="rounded-md bg-gray-50 px-3 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100"
+          >
+            Export
+          </button>
+          {sortedVideos.length > 0 && (
+            <button
+              onClick={clearAll}
+              className="rounded-md bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-100"
+            >
+              Clear all
+            </button>
+          )}
+        </div>
       </div>
 
       {sortedVideos.length === 0 ? (
