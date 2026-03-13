@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- Background: dark rounded square, fills the full canvas -->
+  <rect width="128" height="128" rx="24" ry="24" fill="#1a1a1a"/>
+
+  <!-- Play button (red rounded triangle, centered slightly up) -->
+  <polygon points="46,38 46,82 88,60" fill="#FF3B30" rx="4"/>
+
+  <!-- Progress bar track -->
+  <rect x="18" y="96" width="92" height="8" rx="4" fill="#3a3a3a"/>
+  <!-- Progress bar fill (about 60% through) -->
+  <rect x="18" y="96" width="55" height="8" rx="4" fill="#FF3B30"/>
+
+  <!-- Progress marker dot -->
+  <circle cx="73" cy="100" r="7" fill="white"/>
+  <circle cx="73" cy="100" r="4" fill="#FF3B30"/>
+</svg>

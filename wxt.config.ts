@@ -9,7 +9,7 @@ export default defineConfig({
   }),
   manifest: {
     name: 'YouTube Tracker',
-    description: 'Track your progress on Youtube videos',
+    description: 'Automatically saves your progress on YouTube videos and resumes from where you left off.',
     permissions: ['storage'],
     host_permissions: ['*://*.youtube.com/*'],
     icons: {
