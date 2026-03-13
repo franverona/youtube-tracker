@@ -111,7 +111,7 @@ export default function App() {
           <p className="text-xs text-gray-300">Watch a YouTube video to get started</p>
         </div>
       ) : (
-        <div className="divide-y divide-gray-100 rounded-lg border border-gray-200 bg-white">
+        <div className="divide-y divide-gray-100 overflow-hidden rounded-lg border border-gray-200 bg-white">
           {sortedVideos.map(({ id, progress, duration, timestamp, title, url }) => {
             const progressPercent = Math.min(
               (progress / (duration ?? FALLBACK_VIDEO_DURATION)) * 100,
@@ -120,13 +120,13 @@ export default function App() {
             return (
               <div
                 key={id}
-                className="group flex items-center gap-4 p-4 transition-colors hover:bg-gray-50">
+                className="group flex items-center gap-4 p-2 transition-colors hover:bg-gray-50">
                 {/* Thumbnail */}
-                <a href={url} target="_blank" rel="noreferrer" className="relative shrink-0">
+                <a href={url} target="_blank" rel="noreferrer" className="relative w-42 shrink-0">
                   <img
                     src={getThumbnail(id)}
                     alt={title}
-                    className="h-[63px] w-[112px] rounded object-cover"
+                    className="rounded border border-gray-200 object-cover"
                   />
                   <span className="absolute right-1 bottom-1 rounded bg-black/80 px-1 py-0.5 text-[10px] font-medium text-white">
                     {formatTime(progress)}
@@ -154,7 +154,7 @@ export default function App() {
                 {/* Delete */}
                 <button
                   onClick={() => videoStorage.remove(id)}
-                  className="rounded p-1.5 text-gray-400 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-500"
+                  className="rounded p-1.5 text-gray-400 hover:text-red-500"
                   title="Remove">
                   <svg
                     width="16"

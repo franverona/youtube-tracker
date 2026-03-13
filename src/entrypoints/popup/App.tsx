@@ -106,11 +106,11 @@ export default function App() {
               key={id}
               className="group flex gap-3 rounded-lg p-2 transition-colors hover:bg-gray-50">
               {/* Thumbnail */}
-              <a href={url} target="_blank" rel="noreferrer" className="relative shrink-0">
+              <a href={url} target="_blank" rel="noreferrer" className="relative w-32 shrink-0">
                 <img
                   src={getThumbnail(id)}
                   alt={title}
-                  className="h-[63px] w-[112px] rounded object-cover"
+                  className="rounded border border-gray-200 object-cover"
                 />
                 <span className="absolute right-1 bottom-1 rounded bg-black/80 px-1 py-0.5 text-[10px] font-medium text-white">
                   {formatTime(progress)}
