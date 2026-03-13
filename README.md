@@ -34,7 +34,7 @@ A Chrome and Firefox browser extension that automatically tracks your progress o
 
 #### Prerequisites
 
-- Node.js ≥22.15.1 (use `.nvmrc`: `nvm use`)
+- Node.js ≥24.12.0 (use `.nvmrc`: `nvm use`)
 
 #### Setup
 
