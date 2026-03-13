@@ -51,7 +51,7 @@ export default defineConfig(
     },
   },
   {
-    files: ['**/*.test.ts'],
+    files: ['**/*.test.ts', '**/*.test.tsx'],
     languageOptions: {
       globals: {
         describe: 'readonly',

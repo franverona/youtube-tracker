@@ -4,8 +4,10 @@ export function getVideoId() {
 }
 
 export function getVideoElement() {
-  return document.querySelector<HTMLVideoElement>('video.html5-main-video')
-  ?? document.querySelector<HTMLVideoElement>('#movie_player video')
+  return (
+    document.querySelector<HTMLVideoElement>('video.html5-main-video') ??
+    document.querySelector<HTMLVideoElement>('#movie_player video')
+  )
 }
 
 export function getVideoTitle() {
