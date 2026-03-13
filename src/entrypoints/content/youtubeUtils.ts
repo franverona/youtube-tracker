@@ -8,7 +8,9 @@ export function getVideoElement() {
 }
 
 export function getVideoTitle() {
-  const titleElement = document.querySelector('h1.ytd-watch-metadata, h1.ytd-video-primary-info-renderer')
+  const titleElement = document.querySelector(
+    'h1.ytd-watch-metadata, h1.ytd-video-primary-info-renderer',
+  )
   if (titleElement instanceof HTMLElement) {
     return titleElement.innerText.trim()
   }

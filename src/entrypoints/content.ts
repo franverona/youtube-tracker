@@ -6,8 +6,12 @@ export default defineContentScript({
   matches: ['*://*.youtube.com/watch*'],
   main() {
     let isTrackingEnabled = true
-    trackingEnabledItem.getValue().then((v) => { isTrackingEnabled = v })
-    trackingEnabledItem.watch((v) => { isTrackingEnabled = v })
+    trackingEnabledItem.getValue().then((v) => {
+      isTrackingEnabled = v
+    })
+    trackingEnabledItem.watch((v) => {
+      isTrackingEnabled = v
+    })
 
     let currentVideoId: string | null = null
     let currentVideoElement: HTMLVideoElement | null = null
@@ -34,7 +38,11 @@ export default defineContentScript({
 
     async function saveCurrent() {
       if (!isTrackingEnabled || !currentVideoId || !currentVideoElement) return
-      await saveProgress(currentVideoId, currentVideoElement.currentTime, currentVideoElement.duration)
+      await saveProgress(
+        currentVideoId,
+        currentVideoElement.currentTime,
+        currentVideoElement.duration,
+      )
     }
 
     async function initializeVideoTracking() {
@@ -73,7 +81,8 @@ export default defineContentScript({
 
         const durationInSeconds = currentVideoElement.duration
         const shortVideoThreshold = 15 * 60
-        const currentSaveDelay = durationInSeconds && durationInSeconds > shortVideoThreshold ? 30000 : 5000
+        const currentSaveDelay =
+          durationInSeconds && durationInSeconds > shortVideoThreshold ? 30000 : 5000
 
         saveInterval = setInterval(async () => {
           await saveCurrent()
@@ -81,16 +90,24 @@ export default defineContentScript({
       }
 
       currentVideoElement.addEventListener('play', () => setSaveInterval(), { signal })
-      currentVideoElement.addEventListener('pause', async () => {
-        clearSaveInterval()
-        await saveCurrent()
-      }, { signal })
-      currentVideoElement.addEventListener('ended', async () => {
-        clearSaveInterval()
-        if (currentVideoId) {
-          await videoStorage.remove(currentVideoId)
-        }
-      }, { signal })
+      currentVideoElement.addEventListener(
+        'pause',
+        async () => {
+          clearSaveInterval()
+          await saveCurrent()
+        },
+        { signal },
+      )
+      currentVideoElement.addEventListener(
+        'ended',
+        async () => {
+          clearSaveInterval()
+          if (currentVideoId) {
+            await videoStorage.remove(currentVideoId)
+          }
+        },
+        { signal },
+      )
       currentVideoElement.addEventListener('loadedmetadata', setSaveInterval, { signal })
 
       if (!currentVideoElement.paused) {

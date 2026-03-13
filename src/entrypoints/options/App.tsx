@@ -29,7 +29,7 @@ export default function App() {
     () => (videos ? Object.values(videos).sort((a, b) => b.timestamp - a.timestamp) : null),
     [videos],
   )
-  const [importStatus, setImportStatus] = useState<{ ok: boolean, message: string } | null>(null)
+  const [importStatus, setImportStatus] = useState<{ ok: boolean; message: string } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   async function clearAll() {
@@ -84,24 +84,27 @@ export default function App() {
               {importStatus.message}
             </span>
           )}
-          <input ref={fileInputRef} type="file" accept=".json" className="hidden" onChange={handleFileChange} />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            className="hidden"
+            onChange={handleFileChange}
+          />
           <button
             onClick={handleImportClick}
-            className="rounded-md bg-gray-50 px-3 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100"
-          >
+            className="rounded-md bg-gray-50 px-3 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100">
             Import
           </button>
           <button
             onClick={exportData}
-            className="rounded-md bg-gray-50 px-3 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100"
-          >
+            className="rounded-md bg-gray-50 px-3 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100">
             Export
           </button>
           {sortedVideos.length > 0 && (
             <button
               onClick={clearAll}
-              className="rounded-md bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-100"
-            >
+              className="rounded-md bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-100">
               Clear all
             </button>
           )}
@@ -110,7 +113,12 @@ export default function App() {
 
       {sortedVideos.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-2 py-20">
-          <svg className="text-gray-300" width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
+          <svg
+            className="text-gray-300"
+            width="48"
+            height="48"
+            viewBox="0 0 24 24"
+            fill="currentColor">
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" />
           </svg>
           <p className="text-sm text-gray-400">No videos tracked yet</p>
@@ -119,9 +127,14 @@ export default function App() {
       ) : (
         <div className="divide-y divide-gray-100 rounded-lg border border-gray-200 bg-white">
           {sortedVideos.map(({ id, progress, duration, timestamp, title, url }) => {
-            const progressPercent = Math.min((progress / (duration ?? FALLBACK_VIDEO_DURATION)) * 100, 100)
+            const progressPercent = Math.min(
+              (progress / (duration ?? FALLBACK_VIDEO_DURATION)) * 100,
+              100,
+            )
             return (
-              <div key={id} className="group flex items-center gap-4 p-4 transition-colors hover:bg-gray-50">
+              <div
+                key={id}
+                className="group flex items-center gap-4 p-4 transition-colors hover:bg-gray-50">
                 {/* Thumbnail */}
                 <a href={url} target="_blank" rel="noreferrer" className="relative shrink-0">
                   <img
@@ -140,8 +153,7 @@ export default function App() {
                     href={url}
                     target="_blank"
                     rel="noreferrer"
-                    className="line-clamp-1 text-sm font-medium text-gray-900 hover:text-blue-600"
-                  >
+                    className="line-clamp-1 text-sm font-medium text-gray-900 hover:text-blue-600">
                     {title}
                   </a>
                   <div className="h-1 w-full overflow-hidden rounded-full bg-gray-200">
@@ -156,10 +168,15 @@ export default function App() {
                 {/* Delete */}
                 <button
                   onClick={() => videoStorage.remove(id)}
-                  className="rounded p-1.5 text-gray-400 opacity-0 transition-opacity hover:text-red-500 group-hover:opacity-100"
-                  title="Remove"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  className="rounded p-1.5 text-gray-400 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-500"
+                  title="Remove">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2">
                     <polyline points="3 6 5 6 21 6" />
                     <path d="M19 6l-1 14H6L5 6" />
                     <path d="M10 11v6M14 11v6" />
