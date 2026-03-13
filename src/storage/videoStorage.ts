@@ -35,3 +35,17 @@ export const videoStorage = {
     await videoStorageItem.setValue(next)
   },
 }
+
+export function isValidVideoState(data: unknown): data is VideoStateType {
+  if (typeof data !== 'object' || data === null || Array.isArray(data)) return false
+  return Object.values(data).every(
+    (entry) =>
+      typeof entry === 'object' &&
+      entry !== null &&
+      typeof (entry as Record<string, unknown>).id === 'string' &&
+      typeof (entry as Record<string, unknown>).progress === 'number' &&
+      typeof (entry as Record<string, unknown>).timestamp === 'number' &&
+      typeof (entry as Record<string, unknown>).title === 'string' &&
+      typeof (entry as Record<string, unknown>).url === 'string',
+  )
+}

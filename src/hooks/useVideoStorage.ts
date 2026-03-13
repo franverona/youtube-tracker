@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { videoStorageItem, type VideoStateType } from '../storage/videoStorage'
+import { videoStorageItem, type VideoStateType } from '@/storage'
 
 export function useVideoStorage() {
   const [videos, setVideos] = useState<VideoStateType | null>(null)

@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { videoStorage, type VideoDetails } from '../../storage/videoStorage'
+import { videoStorage, type VideoDetails } from '@/storage'
 import { loadProgress, saveProgress } from './videoUtils'
 
-vi.mock('../../storage/videoStorage', () => ({
+vi.mock('@/storage', () => ({
   videoStorage: {
     getById: vi.fn(),
     save: vi.fn(),

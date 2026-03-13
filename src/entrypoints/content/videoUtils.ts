@@ -1,4 +1,4 @@
-import { videoStorage, type VideoDetails } from '../../storage/videoStorage'
+import { videoStorage, type VideoDetails } from '@/storage'
 import { getVideoTitle } from './youtubeUtils'
 
 export async function saveProgress(videoId: string, progress: number, duration?: number) {
