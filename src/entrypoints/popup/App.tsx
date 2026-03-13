@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { trackingEnabledItem, videoStorage } from '../../storage/videoStorage'
 import { formatTime, timeAgo } from '../../utils'
-import { useVideoStorage } from './useVideoStorage'
+import { useVideoStorage } from '@/hooks'
 
 function getThumbnail(id: string) {
   return `https://i.ytimg.com/vi/${id}/mqdefault.jpg`

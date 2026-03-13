@@ -16,7 +16,8 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
-      "#imports": ["./.wxt/types/imports.d.ts"]
+      "#imports": ["./.wxt/types/imports.d.ts"],
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src", "wxt.config.ts", ".wxt/*.d.ts"]

@@ -1,7 +1,7 @@
 import { useRef, useMemo, useState } from 'react'
 import { type VideoStateType, videoStorage, videoStorageItem } from '../../storage/videoStorage'
 import { formatTime, timeAgo } from '../../utils'
-import { useVideoStorage } from '../popup/useVideoStorage'
+import { useVideoStorage } from '@/hooks'
 
 function getThumbnail(id: string) {
   return `https://i.ytimg.com/vi/${id}/mqdefault.jpg`
