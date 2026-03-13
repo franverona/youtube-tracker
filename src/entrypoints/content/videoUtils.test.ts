@@ -48,12 +48,15 @@ describe('saveProgress', () => {
 
   it('calls videoStorage.save with the correct data', async () => {
     await saveProgress('abc123', 42)
-    expect(videoStorage.save).toHaveBeenCalledWith('abc123', expect.objectContaining({
-      id: 'abc123',
-      progress: 42,
-      title: 'Test Title',
-      url: 'https://www.youtube.com/watch?v=abc123',
-    }))
+    expect(videoStorage.save).toHaveBeenCalledWith(
+      'abc123',
+      expect.objectContaining({
+        id: 'abc123',
+        progress: 42,
+        title: 'Test Title',
+        url: 'https://www.youtube.com/watch?v=abc123',
+      }),
+    )
   })
 })
 
@@ -80,7 +83,13 @@ describe('loadProgress', () => {
   })
 
   it('does nothing if stored progress is 0', async () => {
-    const stored: VideoDetails = { id: 'abc123', progress: 0, timestamp: 1000, title: 'T', url: 'u' }
+    const stored: VideoDetails = {
+      id: 'abc123',
+      progress: 0,
+      timestamp: 1000,
+      title: 'T',
+      url: 'u',
+    }
     vi.mocked(videoStorage.getById).mockResolvedValue(stored)
     const video = createMockVideo()
     await loadProgress('abc123', video)
@@ -88,7 +97,13 @@ describe('loadProgress', () => {
   })
 
   it('sets currentTime when readyState is sufficient', async () => {
-    const stored: VideoDetails = { id: 'abc123', progress: 50, timestamp: 1000, title: 'T', url: 'u' }
+    const stored: VideoDetails = {
+      id: 'abc123',
+      progress: 50,
+      timestamp: 1000,
+      title: 'T',
+      url: 'u',
+    }
     vi.mocked(videoStorage.getById).mockResolvedValue(stored)
     const video = createMockVideo({ readyState: 4, duration: 300 })
     await loadProgress('abc123', video)
@@ -96,7 +111,13 @@ describe('loadProgress', () => {
   })
 
   it('skips setting currentTime when within 5s of the end', async () => {
-    const stored: VideoDetails = { id: 'abc123', progress: 297, timestamp: 1000, title: 'T', url: 'u' }
+    const stored: VideoDetails = {
+      id: 'abc123',
+      progress: 297,
+      timestamp: 1000,
+      title: 'T',
+      url: 'u',
+    }
     vi.mocked(videoStorage.getById).mockResolvedValue(stored)
     const video = createMockVideo({ readyState: 4, duration: 300 })
     await loadProgress('abc123', video)
@@ -104,7 +125,13 @@ describe('loadProgress', () => {
   })
 
   it('calls play() when paused at a significant position', async () => {
-    const stored: VideoDetails = { id: 'abc123', progress: 50, timestamp: 1000, title: 'T', url: 'u' }
+    const stored: VideoDetails = {
+      id: 'abc123',
+      progress: 50,
+      timestamp: 1000,
+      title: 'T',
+      url: 'u',
+    }
     vi.mocked(videoStorage.getById).mockResolvedValue(stored)
     const video = createMockVideo({ readyState: 4, paused: true })
     await loadProgress('abc123', video)

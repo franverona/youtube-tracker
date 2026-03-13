@@ -19,11 +19,15 @@
     "test": "vitest run",
     "type-check": "wxt prepare && tsc --noEmit",
     "lint": "eslint src",
+    "format": "prettier --write src/",
     "postinstall": "wxt prepare && husky",
     "prepare": "husky"
   },
   "lint-staged": {
-    "src/**/*.{ts,tsx}": "eslint"
+    "src/**/*.{ts,tsx}": [
+      "prettier --write",
+      "eslint"
+    ]
   },
   "dependencies": {
     "react": "^19.1.0",
@@ -32,18 +36,19 @@
   "devDependencies": {
     "@commitlint/cli": "^20.4.3",
     "@commitlint/config-conventional": "^20.4.3",
-    "@stylistic/eslint-plugin": "^5.10.0",
     "@tailwindcss/vite": "^4.0.0",
     "@types/react": "^19.1.5",
     "@types/react-dom": "^19.1.5",
     "@wxt-dev/module-react": "^1.2.1",
     "eslint": "^9.39.3",
-    "eslint-plugin-import": "^2.32.0",
+    "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
     "husky": "^9.1.7",
     "jsdom": "^28.1.0",
     "lint-staged": "^16.3.2",
+    "prettier": "^3.8.1",
+    "prettier-plugin-tailwindcss": "^0.7.2",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
