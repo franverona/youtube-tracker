@@ -1,4 +1,4 @@
-import { trackingEnabledItem, videoStorage } from '../storage/videoStorage'
+import { trackingEnabledItem, videoStorage } from '@/storage'
 import { loadProgress, saveProgress } from './content/videoUtils'
 import { getVideoElement, getVideoId } from './content/youtubeUtils'
 

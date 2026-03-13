@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { videoStorage, type VideoDetails } from './videoStorage'
+import { isValidVideoState, videoStorage, type VideoDetails } from './videoStorage'
 
 const mockData = vi.hoisted(() => ({ state: {} as Record<string, VideoDetails> }))
 
@@ -67,6 +67,88 @@ describe('videoStorage', () => {
       mockData.state = { abc123: sample, other }
       await videoStorage.remove('abc123')
       expect(mockData.state).toEqual({ other })
+    })
+  })
+
+  describe('isValidVideoState', () => {
+    it('returns false for non-object type', () => {
+      expect(isValidVideoState(null)).toBeFalsy()
+      expect(isValidVideoState([])).toBeFalsy()
+      expect(isValidVideoState(1)).toBeFalsy()
+      expect(isValidVideoState('test')).toBeFalsy()
+    })
+
+    it('returns true if contains valid video objects', async () => {
+      expect(
+        isValidVideoState({
+          'yt-1234': {
+            id: 'yt-1234',
+            progress: 1234,
+            timestamp: 1773393795641,
+            title: 'Video title',
+            url: 'https://example.com',
+          },
+        }),
+      ).toBeTruthy()
+    })
+
+    it('returns false if some video is not valid', async () => {
+      expect(
+        isValidVideoState({
+          'yt-1234': {
+            id: 'yt-1234',
+            progress: 1234,
+            timestamp: 1773393795641,
+            title: 'Video title',
+            url: 'https://example.com',
+          },
+          'yt-5678': {
+            progress: 1234,
+            timestamp: 1773393795641,
+            title: 'Video title',
+            url: 'https://example.com',
+          },
+        }),
+      ).toBeFalsy()
+
+      expect(
+        isValidVideoState({
+          'yt-1234': {
+            id: 'yt-1234',
+            progress: 1234,
+            timestamp: 1773393795641,
+            title: 'Video title',
+            url: 'https://example.com',
+          },
+          'yt-5678': null,
+        }),
+      ).toBeFalsy()
+
+      expect(
+        isValidVideoState({
+          'yt-1234': {
+            id: 'yt-1234',
+            progress: 1234,
+            timestamp: 1773393795641,
+            title: 'Video title',
+            url: 'https://example.com',
+          },
+          'yt-5678': [],
+        }),
+      ).toBeFalsy()
+
+      expect(
+        isValidVideoState({
+          'yt-1234': {
+            id: 'yt-1234',
+            progress: 1234,
+            timestamp: 1773393795641,
+            title: 'Video title',
+            url: 'https://example.com',
+          },
+          'yt-5678': {},
+        }),
+      ).toBeFalsy()
     })
   })
 })

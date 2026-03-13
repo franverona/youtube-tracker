@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { trackingEnabledItem, videoStorage } from '../../storage/videoStorage'
+import { trackingEnabledItem, videoStorage } from '@/storage'
 import { formatTime, timeAgo } from '../../utils'
 import { useVideoStorage } from '@/hooks'
 

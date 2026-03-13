@@ -1,5 +1,5 @@
 import { useRef, useMemo, useState } from 'react'
-import { type VideoStateType, videoStorage, videoStorageItem } from '../../storage/videoStorage'
+import { isValidVideoState, videoStorage, videoStorageItem } from '@/storage'
 import { formatTime, timeAgo } from '../../utils'
 import { useVideoStorage } from '@/hooks'
 
@@ -8,20 +8,6 @@ function getThumbnail(id: string) {
 }
 
 const FALLBACK_VIDEO_DURATION = 4 * 60 * 60
-
-function isValidVideoState(data: unknown): data is VideoStateType {
-  if (typeof data !== 'object' || data === null || Array.isArray(data)) return false
-  return Object.values(data).every(
-    (entry) =>
-      typeof entry === 'object' &&
-      entry !== null &&
-      typeof (entry as Record<string, unknown>).id === 'string' &&
-      typeof (entry as Record<string, unknown>).progress === 'number' &&
-      typeof (entry as Record<string, unknown>).timestamp === 'number' &&
-      typeof (entry as Record<string, unknown>).title === 'string' &&
-      typeof (entry as Record<string, unknown>).url === 'string',
-  )
-}
 
 export default function App() {
   const videos = useVideoStorage()
