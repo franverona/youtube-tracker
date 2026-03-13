@@ -1,5 +1,7 @@
 # YouTube Tracker
 
+[!Popup](./screenshots/popup-screenshot.png)
+
 A Chrome and Firefox browser extension that automatically tracks your progress on YouTube videos and resumes playback from where you left off.
 
 ## Features
