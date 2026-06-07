@@ -19,6 +19,11 @@ export default function App() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   async function clearAll() {
+    if (!sortedVideos || sortedVideos.length === 0) return
+    const confirmed = window.confirm(
+      `Remove all ${sortedVideos.length} tracked video${sortedVideos.length !== 1 ? 's' : ''}? This cannot be undone.`,
+    )
+    if (!confirmed) return
     await videoStorageItem.setValue({})
   }
 
@@ -26,10 +31,13 @@ export default function App() {
     const state = await videoStorageItem.getValue()
     const json = JSON.stringify(state, null, 2)
     const date = new Date().toISOString().slice(0, 10)
+    const blob = new Blob([json], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
-    a.href = `data:application/json;charset=utf-8,${encodeURIComponent(json)}`
+    a.href = url
     a.download = `youtube-tracker-backup-${date}.json`
     a.click()
+    URL.revokeObjectURL(url)
   }
 
   function handleImportClick() {
