@@ -21,6 +21,12 @@ export default defineConfig({
     action: {
       default_title: 'YouTube Tracker — click to view saved progress',
     },
+    commands: {
+      'toggle-tracking': {
+        suggested_key: { default: 'Alt+Shift+Y' },
+        description: 'Enable/pause YouTube Tracker',
+      },
+    },
     browser_specific_settings: {
       gecko: {
         id: 'youtube-tracker@franverona.com',
