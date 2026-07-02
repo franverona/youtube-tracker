@@ -11,19 +11,19 @@ Built with [WXT](https://wxt.dev) — a single-package setup with no monorepo.
 ## Development Commands
 
 ```bash
-npm install               # Install dependencies (also runs wxt prepare)
+pnpm install               # Install dependencies (also runs wxt prepare)
 
-npm run dev               # Build Chrome extension in development mode with watch
-npm run dev:firefox       # Build for Firefox with watch
+pnpm run dev               # Build Chrome extension in development mode with watch
+pnpm run dev:firefox       # Build for Firefox with watch
 
-npm run build             # Build for Chrome (production)
-npm run build:firefox     # Build for Firefox (production)
-npm run zip               # Build and create a zip file for Chrome
-npm run zip:firefox       # Build and create a zip file for Firefox
+pnpm run build             # Build for Chrome (production)
+pnpm run build:firefox     # Build for Firefox (production)
+pnpm run zip               # Build and create a zip file for Chrome
+pnpm run zip:firefox       # Build and create a zip file for Firefox
 
-npm run test              # Run unit tests with Vitest
-npm run type-check        # Run TypeScript type checking
-npm run lint              # Run ESLint on src/
+pnpm run test              # Run unit tests with Vitest
+pnpm run type-check        # Run TypeScript type checking
+pnpm run lint              # Run ESLint on src/
 ```
 
 ## Architecture
@@ -125,7 +125,7 @@ Build outputs go to `.output/chrome-mv3/` and `.output/firefox-mv2/`.
 
 ### Testing
 
-- **Vitest** (`vitest.config.ts`) — unit tests run with `npm run test`
+- **Vitest** (`vitest.config.ts`) — unit tests run with `pnpm run test`
 - **jsdom** environment — DOM APIs are available in tests without a browser
 - Test files live alongside the source files they test (`*.test.ts`)
 - `src/test/setup.ts` is the global setup file (currently suppresses `console.warn`)
@@ -134,11 +134,11 @@ Build outputs go to `.output/chrome-mv3/` and `.output/firefox-mv2/`.
 ### CI
 
 GitHub Actions runs on every push to `main` and on all pull requests (`.github/workflows/ci.yml`):
-1. `npm run test`
-2. `npm run type-check`
-3. `npm run lint`
-4. `npm run build` (Chrome)
-5. `npm run build:firefox` (Firefox)
+1. `pnpm run test`
+2. `pnpm run type-check`
+3. `pnpm run lint`
+4. `pnpm run build` (Chrome)
+5. `pnpm run build:firefox` (Firefox)
 
 ## Development Notes
 
@@ -161,7 +161,7 @@ GitHub Actions runs on every push to `main` and on all pull requests (`.github/w
 
 ### Multi-Browser Support
 - Chrome builds target MV3, Firefox targets MV2 — WXT handles this automatically
-- Test both browsers using `npm run dev` vs `npm run dev:firefox`
+- Test both browsers using `pnpm run dev` vs `pnpm run dev:firefox`
 - Build outputs are in `.output/chrome-mv3/` and `.output/firefox-mv2/`
 
 ### Hot Module Replacement

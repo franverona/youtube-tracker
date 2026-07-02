@@ -52,10 +52,10 @@ cd youtube-tracker
 nvm use
 
 # Install dependencies (also sets up git hooks via husky)
-npm install
+pnpm install
 
 # Start development mode (Chrome)
-npm run dev
+pnpm run dev
 ```
 
 The extension will be built to the `.output/chrome-mv3/` directory. Load the unpacked extension from there.
@@ -66,25 +66,25 @@ The extension will be built to the `.output/chrome-mv3/` directory. Load the unp
 
 ```bash
 # Development (with hot reload)
-npm run dev              # Chrome
-npm run dev:firefox      # Firefox
+pnpm run dev              # Chrome
+pnpm run dev:firefox      # Firefox
 
 # Build for production
-npm run build            # Chrome
-npm run build:firefox    # Firefox
+pnpm run build            # Chrome
+pnpm run build:firefox    # Firefox
 
 # Create distributable ZIP files
-npm run zip              # Chrome
-npm run zip:firefox      # Firefox
+pnpm run zip              # Chrome
+pnpm run zip:firefox      # Firefox
 
 # Run tests
-npm run test
+pnpm run test
 
 # Type checking
-npm run type-check
+pnpm run type-check
 
 # Lint
-npm run lint
+pnpm run lint
 ```
 
 ### Project Structure
@@ -183,7 +183,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes
-4. Run type checking and linting (`npm run type-check && npm run lint`)
+4. Run type checking and linting (`pnpm run type-check && pnpm run lint`)
 5. Commit using [Conventional Commits](https://www.conventionalcommits.org/) format (enforced automatically): `git commit -m 'feat: add amazing feature'`
 6. Push to the branch (`git push origin feature/amazing-feature`)
 7. Open a Pull Request
