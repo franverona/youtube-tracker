@@ -33,6 +33,7 @@ npm run lint              # Run ESLint on src/
 ```
 src/
   entrypoints/
+    background.ts          # Toolbar badge/title (video count, paused state) + toggle-tracking command
     content.ts              # Content script entry point (defineContentScript)
     content/
       videoUtils.ts         # saveProgress / loadProgress
@@ -42,18 +43,29 @@ src/
     popup/
       index.html
       main.tsx              # React root
-      App.tsx               # Popup UI component
+      App.tsx               # Popup UI: tracking toggle + tracked video list
       App.css               # Tailwind CSS import + popup styles
-      useVideoStorage.ts    # React hook for live storage updates
+    options/
+      index.html
+      main.tsx              # React root
+      App.tsx               # Options page: full video list, export/import, clear all
+      App.css
+  hooks/
+    useVideoStorage.ts     # React hook for live storage updates (used by popup + options)
+    index.ts
   storage/
-    videoStorage.ts         # videoStorageItem (WXT storage) + videoStorage helpers
+    videoStorage.ts         # videoStorageItem, trackingEnabledItem (WXT storage) + videoStorage helpers
     videoStorage.test.ts
+    index.ts                # Barrel re-exported as `@/storage`
+  utils.ts                  # formatTime / timeAgo
+  utils.test.ts
   test/
     setup.ts                # Vitest global setup (suppresses console.warn)
 public/
+  icon-16.png
   icon-48.png
   icon-128.png
-wxt.config.ts               # WXT config: srcDir, React module, Tailwind, manifest
+wxt.config.ts               # WXT config: srcDir, React module, Tailwind, manifest (incl. toggle-tracking command)
 tsconfig.json               # Extends .wxt/tsconfig.json after wxt prepare
 ```
 
@@ -73,16 +85,26 @@ Build outputs go to `.output/chrome-mv3/` and `.output/firefox-mv2/`.
    - Saves progress periodically (5s for short videos, 30s for long videos) when playing
    - Saves immediately on pause, video end, or page unload
 
-3. **Storage Layer** (`src/storage/videoStorage.ts`):
+3. **Storage Layer** (`src/storage/videoStorage.ts`, exported via `@/storage`):
    - Uses `wxt/utils/storage` — `storage.defineItem<VideoStateType>('local:video-storage')`
-   - `videoStorageItem` is the raw WXT storage item (used for `.watch()` in the popup hook)
-   - `videoStorage` is a convenience wrapper with `getById`, `save`, `remove`
-   - Each entry contains: `id`, `progress` (currentTime in seconds), `timestamp`, `title`, `url`
+   - `videoStorageItem` is the raw WXT storage item (used for `.watch()` in the shared hook)
+   - `videoStorage` is a convenience wrapper with `getById`, `save`, `remove` — writes are serialized through an internal queue to avoid clobbering concurrent saves
+   - `trackingEnabledItem` (`local:tracking-enabled`, boolean, default `true`) is the global on/off switch checked by the content script before loading/saving progress
+   - Each video entry contains: `id`, `progress` (currentTime in seconds), `duration?`, `timestamp`, `title`, `url`
+   - `isValidVideoState()` validates untrusted data (used by the options page's JSON import)
 
 4. **Popup UI** (`src/entrypoints/popup/`):
-   - React 19 component displaying tracked videos sorted by timestamp
-   - `useVideoStorage` hook subscribes to live storage changes via `videoStorageItem.watch()`
+   - React 19 component displaying tracked videos sorted by timestamp, plus a tracking on/off toggle and a settings button (opens the options page)
+   - `useVideoStorage` hook (`src/hooks/`) subscribes to live storage changes via `videoStorageItem.watch()`
    - Styled with Tailwind CSS v4
+
+5. **Options Page** (`src/entrypoints/options/`):
+   - Full-page video list (same data as the popup) with export/import (JSON) and clear-all controls
+   - Reuses `useVideoStorage` and `isValidVideoState`
+
+6. **Background** (`src/entrypoints/background.ts`):
+   - Sets the toolbar badge to the tracked-video count, or a gray "paused" indicator when `trackingEnabledItem` is `false`
+   - Registers the `toggle-tracking` command (default shortcut `Alt+Shift+Y`, declared in `wxt.config.ts`) to flip `trackingEnabledItem` without opening the popup
 
 ### Build System
 
@@ -127,9 +149,15 @@ GitHub Actions runs on every push to `main` and on all pull requests (`.github/w
 - Storage helpers are in `src/entrypoints/content/videoUtils.ts`
 
 ### Working with Storage
-- Use `videoStorage` from `src/storage/videoStorage.ts` for read/write operations
-- Use `videoStorageItem` directly when you need to subscribe to changes (`.watch()`)
+- Import from `@/storage` (barrel over `src/storage/videoStorage.ts`)
+- Use `videoStorage` for read/write operations (`getById`, `save`, `remove`)
+- Use `videoStorageItem` directly when you need to subscribe to changes (`.watch()`), or `trackingEnabledItem` for the global on/off flag
 - Storage operations are async and return Promises
+
+### Popup vs Options
+- Popup (`src/entrypoints/popup/`) is the quick-glance view: recent videos, tracking toggle, link to options
+- Options page (`src/entrypoints/options/`) is the full management view: all videos, export/import, clear all
+- Both share `useVideoStorage` from `src/hooks/`
 
 ### Multi-Browser Support
 - Chrome builds target MV3, Firefox targets MV2 — WXT handles this automatically

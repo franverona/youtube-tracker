@@ -13,6 +13,9 @@ A Chrome and Firefox browser extension that automatically tracks your progress o
   - Long videos (≥15 min): Saves every 30 seconds
 - **Cross-Session Persistence**: Your progress is saved even if you close the browser
 - **YouTube SPA Support**: Works seamlessly with YouTube's navigation without page reloads
+- **Pause/Resume Tracking**: Toggle tracking from the popup, or instantly with the `Alt+Shift+Y` keyboard shortcut — no need to open the popup
+- **At-a-Glance Status**: The toolbar icon badge shows your tracked video count, or a paused indicator when tracking is off
+- **Options Page**: Manage all tracked videos, export/import your data as JSON, or clear everything
 - **Multi-Browser Support**: Available for both Chrome and Firefox
 
 ## Installation
@@ -90,27 +93,36 @@ npm run lint
 youtube-tracker/
 ├── src/
 │   ├── entrypoints/
+│   │   ├── background.ts       # Toolbar badge/title + toggle-tracking shortcut
 │   │   ├── content.ts          # Content script (YouTube tracking logic)
 │   │   ├── content/
 │   │   │   ├── videoUtils.ts        # Save/load progress helpers
 │   │   │   ├── videoUtils.test.ts
 │   │   │   ├── youtubeUtils.ts      # DOM helpers (video element, title, ID)
 │   │   │   └── youtubeUtils.test.ts
-│   │   └── popup/
+│   │   ├── popup/
+│   │   │   ├── index.html
+│   │   │   ├── main.tsx
+│   │   │   ├── App.tsx         # Popup UI: tracking toggle + recent videos
+│   │   │   └── App.css
+│   │   └── options/
 │   │       ├── index.html
 │   │       ├── main.tsx
-│   │       ├── App.tsx         # Popup UI
-│   │       ├── App.css
-│   │       └── useVideoStorage.ts
+│   │       ├── App.tsx         # Options page: full list, export/import, clear all
+│   │       └── App.css
+│   ├── hooks/
+│   │   └── useVideoStorage.ts  # Shared React hook for live storage updates
 │   ├── storage/
 │   │   ├── videoStorage.ts     # Storage abstraction (wxt/utils/storage)
 │   │   └── videoStorage.test.ts
+│   ├── utils.ts                 # formatTime / timeAgo
 │   └── test/
 │       └── setup.ts            # Vitest global setup (suppress console.warn)
 ├── public/
+│   ├── icon-16.png
 │   ├── icon-48.png
 │   └── icon-128.png
-└── wxt.config.ts
+└── wxt.config.ts               # Manifest incl. toggle-tracking command
 ```
 
 ### Tech Stack
@@ -146,12 +158,15 @@ youtube-tracker/
      [videoId]: {
        id: string
        progress: number      // Time in seconds
+       duration?: number     // Video length in seconds
        timestamp: number     // Last save time
        title: string
        url: string
      }
    }
    ```
+
+6. **Pause/Resume**: A separate `tracking-enabled` flag (default: on) gates loading and saving. Toggle it from the popup switch or the `Alt+Shift+Y` shortcut — the content script checks it before touching video progress, and the toolbar badge reflects the current state.
 
 ## Browser Support
 
