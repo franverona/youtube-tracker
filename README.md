@@ -16,6 +16,7 @@ A Chrome and Firefox browser extension that automatically tracks your progress o
 - **Pause/Resume Tracking**: Toggle tracking from the popup, or instantly with the `Alt+Shift+Y` keyboard shortcut — no need to open the popup
 - **At-a-Glance Status**: The toolbar icon badge shows your tracked video count, or a paused indicator when tracking is off
 - **Options Page**: Manage all tracked videos, export/import your data as JSON, or clear everything
+- **Dark Mode**: Popup and options pages follow your OS/browser theme automatically
 - **Multi-Browser Support**: Available for both Chrome and Firefox
 
 ## Installation
@@ -183,7 +184,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes
-4. Run type checking and linting (`pnpm run type-check && pnpm run lint`)
+4. Run tests, type checking, and linting (`pnpm run test && pnpm run type-check && pnpm run lint`) — matches what CI checks
 5. Commit using [Conventional Commits](https://www.conventionalcommits.org/) format (enforced automatically): `git commit -m 'feat: add amazing feature'`
 6. Push to the branch (`git push origin feature/amazing-feature`)
 7. Open a Pull Request

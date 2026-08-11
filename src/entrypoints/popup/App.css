@@ -1,5 +1,13 @@
 @import 'tailwindcss';
 
+:root {
+  color-scheme: light dark;
+}
+
+body {
+  @apply bg-white dark:bg-gray-950;
+}
+
 .App {
   max-height: 360px;
   min-width: 400px;

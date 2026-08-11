@@ -30,13 +30,13 @@ export default function App() {
   )
 
   const trackingToggle = (
-    <div className="mb-3 flex w-full items-center justify-between border-b border-gray-100 pb-2">
+    <div className="mb-3 flex w-full items-center justify-between border-b border-gray-100 pb-2 dark:border-gray-800">
       <button
         onClick={toggleTracking}
-        className={`flex items-center gap-2 text-xs font-medium transition-colors ${trackingEnabled ? 'text-gray-500 hover:text-gray-700' : 'text-amber-500 hover:text-amber-600'}`}
+        className={`flex items-center gap-2 text-xs font-medium transition-colors ${trackingEnabled ? 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300' : 'text-amber-500 hover:text-amber-600 dark:text-amber-400 dark:hover:text-amber-300'}`}
         title={trackingEnabled ? 'Pause tracking' : 'Resume tracking'}>
         <span
-          className={`relative inline-flex h-4 w-7 shrink-0 items-center rounded-full transition-colors ${trackingEnabled ? 'bg-red-500' : 'bg-gray-300'}`}>
+          className={`relative inline-flex h-4 w-7 shrink-0 items-center rounded-full transition-colors ${trackingEnabled ? 'bg-red-500' : 'bg-gray-300 dark:bg-gray-600'}`}>
           <span
             className={`inline-block h-3 w-3 rounded-full bg-white shadow transition-transform ${trackingEnabled ? 'translate-x-3.5' : 'translate-x-0.5'}`}
           />
@@ -45,7 +45,7 @@ export default function App() {
       </button>
       <button
         onClick={() => browser.tabs.create({ url: browser.runtime.getURL('/options.html') })}
-        className="rounded p-1 text-gray-400 transition-colors hover:text-gray-600"
+        className="rounded p-1 text-gray-400 transition-colors hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
         title="Settings">
         <svg
           width="14"
@@ -69,15 +69,17 @@ export default function App() {
         {trackingToggle}
         <div className="flex w-full flex-1 flex-col items-center justify-center gap-2">
           <svg
-            className="text-gray-300"
+            className="text-gray-300 dark:text-gray-700"
             width="40"
             height="40"
             viewBox="0 0 24 24"
             fill="currentColor">
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" />
           </svg>
-          <p className="text-sm text-gray-400">No videos tracked yet</p>
-          <p className="text-xs text-gray-300">Watch a YouTube video to get started</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500">No videos tracked yet</p>
+          <p className="text-xs text-gray-300 dark:text-gray-600">
+            Watch a YouTube video to get started
+          </p>
         </div>
       </div>
     )
@@ -86,11 +88,11 @@ export default function App() {
   return (
     <div className="App">
       {trackingToggle}
-      <div className="mb-3 flex items-center justify-between border-b border-gray-100 pb-2">
-        <h3 className="text-xs font-semibold tracking-widest text-gray-500 uppercase">
+      <div className="mb-3 flex items-center justify-between border-b border-gray-100 pb-2 dark:border-gray-800">
+        <h3 className="text-xs font-semibold tracking-widest text-gray-500 uppercase dark:text-gray-400">
           Saved Progress
         </h3>
-        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500 dark:bg-gray-800 dark:text-gray-400">
           {sortedVideos.length}
         </span>
       </div>
@@ -104,13 +106,13 @@ export default function App() {
           return (
             <div
               key={id}
-              className="group flex gap-3 rounded-lg p-2 transition-colors hover:bg-gray-50">
+              className="group flex gap-3 rounded-lg p-2 transition-colors hover:bg-gray-50 dark:hover:bg-gray-900">
               {/* Thumbnail */}
               <a href={url} target="_blank" rel="noreferrer" className="relative w-32 shrink-0">
                 <img
                   src={getThumbnail(id)}
                   alt={title}
-                  className="rounded border border-gray-200 object-cover"
+                  className="rounded border border-gray-200 object-cover dark:border-gray-700"
                 />
                 <span className="absolute right-1 bottom-1 rounded bg-black/80 px-1 py-0.5 text-[10px] font-medium text-white">
                   {formatTime(progress)}
@@ -124,13 +126,13 @@ export default function App() {
                     href={url}
                     target="_blank"
                     rel="noreferrer"
-                    className="mb-1 line-clamp-2 text-sm leading-snug font-medium text-gray-900 hover:text-blue-600">
+                    className="mb-1 line-clamp-2 text-sm leading-snug font-medium text-gray-900 hover:text-blue-600 dark:text-gray-100 dark:hover:text-blue-400">
                     {title}
                   </a>
                 </div>
 
                 {/* Progress bar */}
-                <div className="mb-1.5 h-1 w-full overflow-hidden rounded-full bg-gray-200">
+                <div className="mb-1.5 h-1 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
                   <div
                     className="h-full rounded-full bg-red-500 transition-all"
                     style={{ width: `${progressPercent}%` }}
@@ -139,10 +141,12 @@ export default function App() {
 
                 {/* Footer */}
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-400">{timeAgo(timestamp)}</span>
+                  <span className="text-xs text-gray-400 dark:text-gray-500">
+                    {timeAgo(timestamp)}
+                  </span>
                   <button
                     onClick={() => videoStorage.remove(id)}
-                    className="rounded p-0.5 text-gray-400 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-500"
+                    className="rounded p-0.5 text-gray-400 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400"
                     title="Remove">
                     <svg
                       width="14"
