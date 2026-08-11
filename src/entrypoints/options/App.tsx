@@ -71,10 +71,11 @@ export default function App() {
   return (
     <div className="mx-auto max-w-4xl p-8">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-gray-900">Tracked Videos</h1>
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Tracked Videos</h1>
         <div className="flex items-center gap-2">
           {importStatus && (
-            <span className={`text-sm ${importStatus.ok ? 'text-green-600' : 'text-red-600'}`}>
+            <span
+              className={`text-sm ${importStatus.ok ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
               {importStatus.message}
             </span>
           )}
@@ -87,18 +88,18 @@ export default function App() {
           />
           <button
             onClick={handleImportClick}
-            className="rounded-md bg-gray-50 px-3 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100">
+            className="rounded-md bg-gray-50 px-3 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700">
             Import
           </button>
           <button
             onClick={exportData}
-            className="rounded-md bg-gray-50 px-3 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100">
+            className="rounded-md bg-gray-50 px-3 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700">
             Export
           </button>
           {sortedVideos.length > 0 && (
             <button
               onClick={clearAll}
-              className="rounded-md bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-100">
+              className="rounded-md bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-100 dark:bg-red-950 dark:text-red-400 dark:hover:bg-red-900">
               Clear all
             </button>
           )}
@@ -108,18 +109,20 @@ export default function App() {
       {sortedVideos.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-2 py-20">
           <svg
-            className="text-gray-300"
+            className="text-gray-300 dark:text-gray-700"
             width="48"
             height="48"
             viewBox="0 0 24 24"
             fill="currentColor">
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" />
           </svg>
-          <p className="text-sm text-gray-400">No videos tracked yet</p>
-          <p className="text-xs text-gray-300">Watch a YouTube video to get started</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500">No videos tracked yet</p>
+          <p className="text-xs text-gray-300 dark:text-gray-600">
+            Watch a YouTube video to get started
+          </p>
         </div>
       ) : (
-        <div className="divide-y divide-gray-100 overflow-hidden rounded-lg border border-gray-200 bg-white">
+        <div className="divide-y divide-gray-100 overflow-hidden rounded-lg border border-gray-200 bg-white dark:divide-gray-800 dark:border-gray-800 dark:bg-gray-900">
           {sortedVideos.map(({ id, progress, duration, timestamp, title, url }) => {
             const progressPercent = Math.min(
               (progress / (duration ?? FALLBACK_VIDEO_DURATION)) * 100,
@@ -128,13 +131,13 @@ export default function App() {
             return (
               <div
                 key={id}
-                className="group flex items-center gap-4 p-2 transition-colors hover:bg-gray-50">
+                className="group flex items-center gap-4 p-2 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
                 {/* Thumbnail */}
                 <a href={url} target="_blank" rel="noreferrer" className="relative w-42 shrink-0">
                   <img
                     src={getThumbnail(id)}
                     alt={title}
-                    className="rounded border border-gray-200 object-cover"
+                    className="rounded border border-gray-200 object-cover dark:border-gray-700"
                   />
                   <span className="absolute right-1 bottom-1 rounded bg-black/80 px-1 py-0.5 text-[10px] font-medium text-white">
                     {formatTime(progress)}
@@ -147,22 +150,24 @@ export default function App() {
                     href={url}
                     target="_blank"
                     rel="noreferrer"
-                    className="line-clamp-1 text-sm font-medium text-gray-900 hover:text-blue-600">
+                    className="line-clamp-1 text-sm font-medium text-gray-900 hover:text-blue-600 dark:text-gray-100 dark:hover:text-blue-400">
                     {title}
                   </a>
-                  <div className="h-1 w-full overflow-hidden rounded-full bg-gray-200">
+                  <div className="h-1 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
                     <div
                       className="h-full rounded-full bg-red-500 transition-all"
                       style={{ width: `${progressPercent}%` }}
                     />
                   </div>
-                  <span className="text-xs text-gray-400">{timeAgo(timestamp)}</span>
+                  <span className="text-xs text-gray-400 dark:text-gray-500">
+                    {timeAgo(timestamp)}
+                  </span>
                 </div>
 
                 {/* Delete */}
                 <button
                   onClick={() => videoStorage.remove(id)}
-                  className="rounded p-1.5 text-gray-400 hover:text-red-500"
+                  className="rounded p-1.5 text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400"
                   title="Remove">
                   <svg
                     width="16"
