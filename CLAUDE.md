@@ -96,11 +96,12 @@ Build outputs go to `.output/chrome-mv3/` and `.output/firefox-mv2/`.
 4. **Popup UI** (`src/entrypoints/popup/`):
    - React 19 component displaying tracked videos sorted by timestamp, plus a tracking on/off toggle and a settings button (opens the options page)
    - `useVideoStorage` hook (`src/hooks/`) subscribes to live storage changes via `videoStorageItem.watch()`
-   - Styled with Tailwind CSS v4
+   - Styled with Tailwind CSS v4; dark mode is automatic via the `dark:` variant (`prefers-color-scheme`) — no manual toggle or stored theme setting
 
 5. **Options Page** (`src/entrypoints/options/`):
    - Full-page video list (same data as the popup) with export/import (JSON) and clear-all controls
    - Reuses `useVideoStorage` and `isValidVideoState`
+   - Same automatic dark mode as the popup
 
 6. **Background** (`src/entrypoints/background.ts`):
    - Sets the toolbar badge to the tracked-video count, or a gray "paused" indicator when `trackingEnabledItem` is `false`
