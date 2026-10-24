@@ -92,6 +92,7 @@ Build outputs go to `.output/chrome-mv3/` and `.output/firefox-mv2/`.
    - Loads saved progress from storage via `videoStorage.getById()`
    - Sets video `currentTime` to resume from last position
    - Saves progress periodically (5s for short videos, 30s for long videos) when playing
+   - Nothing is saved before 15s of progress (`MIN_SAVED_PROGRESS`), so previews and misclicks don't create entries
    - Saves immediately on pause, video end, or page unload
 
 3. **Storage Layer** (`src/storage/videoStorage.ts`, exported via `@/storage`):
