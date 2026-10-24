@@ -2,6 +2,12 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Workflow
+
+- Implement every change (fix, improvement, feature, etc.) on a new branch created from an up-to-date `main` — never commit directly to `main`.
+- Each change gets its own branch and its own PR — always open a PR.
+- A PR must not be merged until CI passes successfully.
+
 ## Project Overview
 
 YouTube Tracker is a Chrome/Firefox extension that tracks video progress on YouTube. It automatically saves where you left off in videos and resumes from that position when you return. The extension saves progress every 5 seconds for short videos (<15 min) and every 30 seconds for longer videos.
