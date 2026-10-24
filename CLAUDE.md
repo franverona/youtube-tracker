@@ -31,6 +31,8 @@ pnpm run zip:firefox       # Build and create a zip file for Firefox
 pnpm run test              # Run unit tests with Vitest
 pnpm run type-check        # Run TypeScript type checking
 pnpm run lint              # Run ESLint on src/
+pnpm run format            # Format src/ with Prettier
+pnpm run format:check      # Check Prettier formatting (run in CI)
 ```
 
 ## Architecture
@@ -147,8 +149,13 @@ GitHub Actions runs on every push to `main` and on all pull requests (`.github/w
 1. `pnpm run test`
 2. `pnpm run type-check`
 3. `pnpm run lint`
-4. `pnpm run build` (Chrome)
-5. `pnpm run build:firefox` (Firefox)
+4. `pnpm run format:check`
+5. `pnpm run build` (Chrome)
+6. `pnpm run build:firefox` (Firefox)
+
+The job ("Type check & build") is a required status check on `main` via a repository ruleset, so PRs — including Dependabot auto-merges — can't merge until it passes.
+
+Pushing a `v*` tag runs `.github/workflows/release.yml`: it checks the tag matches `package.json`'s `version`, runs `zip` + `zip:firefox`, and publishes a GitHub release with the zips.
 
 ## Development Notes
 

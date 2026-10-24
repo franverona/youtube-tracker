@@ -7,11 +7,13 @@ on:
       - '**/*.md'
       - 'LICENSE'
       - '.gitignore'
+  # No paths-ignore: "Type check & build" is a required check, so it must
+  # report on every PR or docs-only PRs could never merge.
   pull_request:
-    paths-ignore:
-      - '**/*.md'
-      - 'LICENSE'
-      - '.gitignore'
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -38,6 +40,8 @@ jobs:
       - run: pnpm run type-check
 
       - run: pnpm run lint
+
+      - run: pnpm run format:check
 
       - run: pnpm run build
 
