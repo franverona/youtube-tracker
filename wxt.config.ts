@@ -12,7 +12,6 @@ export default defineConfig({
     short_name: 'YT Tracker',
     description: 'Automatically saves your progress on YouTube videos and resumes from where you left off.',
     permissions: ['storage'],
-    host_permissions: ['*://*.youtube.com/*'],
     icons: {
       16: 'icon-16.png',
       48: 'icon-48.png',

@@ -6,7 +6,7 @@ export default defineContentScript({
   // Content scripts are only injected on full page loads, and YouTube reaches
   // most videos via in-page navigation, so match every page and let
   // initializeVideoTracking() bail outside /watch.
-  matches: ['*://*.youtube.com/*'],
+  matches: ['https://*.youtube.com/*'],
   async main() {
     // Awaited so a hard-loaded watch page doesn't resume while tracking is paused.
     let isTrackingEnabled = await trackingEnabledItem.getValue()

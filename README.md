@@ -138,7 +138,7 @@ youtube-tracker/
 
 ### How It Works
 
-1. **Content Script Injection**: The extension injects a content script on YouTube watch pages (`*://*.youtube.com/watch*`)
+1. **Content Script Injection**: The extension injects a content script on YouTube pages (`https://*.youtube.com/*`) and starts tracking on watch pages
 
 2. **Video Detection**: The script monitors for video elements and extracts the video ID from the URL
 
