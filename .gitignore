@@ -1,5 +1,4 @@
 node_modules
-dist
 .output
 .wxt
 .vitest/
@@ -7,6 +6,5 @@ dist
 .DS_Store
 .idea
 .env
-.turbo/
 
 .claude/settings.local.json
