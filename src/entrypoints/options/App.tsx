@@ -24,7 +24,7 @@ export default function App() {
       `Remove all ${sortedVideos.length} tracked video${sortedVideos.length !== 1 ? 's' : ''}? This cannot be undone.`,
     )
     if (!confirmed) return
-    await videoStorageItem.setValue({})
+    await videoStorage.clear()
   }
 
   async function exportData() {
@@ -57,8 +57,7 @@ export default function App() {
         setImportStatus({ ok: false, message: 'Invalid file format.' })
         return
       }
-      const current = await videoStorageItem.getValue()
-      await videoStorageItem.setValue({ ...current, ...parsed })
+      await videoStorage.import(parsed)
       const count = Object.keys(parsed).length
       setImportStatus({ ok: true, message: `Imported ${count} video${count !== 1 ? 's' : ''}.` })
     } catch {

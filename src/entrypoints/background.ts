@@ -1,21 +1,37 @@
-import { trackingEnabledItem, videoStorageItem } from '@/storage'
+import {
+  applyVideoStorageWrite,
+  isVideoStorageWrite,
+  trackingEnabledItem,
+  videoStorageItem,
+} from '@/storage'
 
 export default defineBackground(() => {
+  // Firefox MV2 only has `browserAction`.
+  const action = browser.action ?? browser.browserAction
   let videoCount = 0
   let trackingEnabled = true
 
   function updateBadge() {
     if (!trackingEnabled) {
-      browser.action.setBadgeText({ text: '❚❚' })
-      browser.action.setBadgeBackgroundColor({ color: '#9CA3AF' })
-      browser.action.setTitle({ title: 'YouTube Tracker — paused, click to resume' })
+      action.setBadgeText({ text: '❚❚' })
+      action.setBadgeBackgroundColor({ color: '#9CA3AF' })
+      action.setTitle({ title: 'YouTube Tracker — paused, click to resume' })
       return
     }
-    browser.action.setBadgeText({ text: videoCount > 0 ? String(videoCount) : '' })
-    browser.action.setBadgeBackgroundColor({ color: '#FF0000' })
-    browser.action.setTitle({ title: 'YouTube Tracker — click to view saved progress' })
+    action.setBadgeText({ text: videoCount > 0 ? String(videoCount) : '' })
+    action.setBadgeBackgroundColor({ color: '#FF0000' })
+    action.setTitle({ title: 'YouTube Tracker — click to view saved progress' })
   }
-  browser.action.setBadgeTextColor({ color: '#fff' })
+  action.setBadgeTextColor({ color: '#fff' })
+
+  browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+    if (!isVideoStorageWrite(message)) return
+    applyVideoStorageWrite(message).then(
+      () => sendResponse(),
+      () => sendResponse(),
+    )
+    return true
+  })
 
   videoStorageItem.getValue().then((state) => {
     videoCount = Object.keys(state).length

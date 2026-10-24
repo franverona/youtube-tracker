@@ -3,12 +3,13 @@ import { loadProgress, saveProgress } from './content/videoUtils'
 import { getVideoElement, getVideoId } from './content/youtubeUtils'
 
 export default defineContentScript({
-  matches: ['*://*.youtube.com/watch*'],
-  main() {
-    let isTrackingEnabled = true
-    trackingEnabledItem.getValue().then((v) => {
-      isTrackingEnabled = v
-    })
+  // Content scripts are only injected on full page loads, and YouTube reaches
+  // most videos via in-page navigation, so match every page and let
+  // initializeVideoTracking() bail outside /watch.
+  matches: ['*://*.youtube.com/*'],
+  async main() {
+    // Awaited so a hard-loaded watch page doesn't resume while tracking is paused.
+    let isTrackingEnabled = await trackingEnabledItem.getValue()
     trackingEnabledItem.watch((v) => {
       isTrackingEnabled = v
     })
@@ -36,13 +37,30 @@ export default defineContentScript({
       }
     }
 
+    // False when tracking is paused, the extension was reloaded (orphaned
+    // script), or YouTube already swapped the reused <video> to the next video
+    // but re-init hasn't run yet — saving then would write B's time under A.
+    function canWrite(): boolean {
+      if (!browser.runtime?.id) {
+        teardown()
+        return false
+      }
+      return isTrackingEnabled && !!currentVideoId && getVideoId() === currentVideoId
+    }
+
     async function saveCurrent() {
-      if (!isTrackingEnabled || !currentVideoId || !currentVideoElement) return
-      await saveProgress(
-        currentVideoId,
-        currentVideoElement.currentTime,
-        currentVideoElement.duration,
-      )
+      if (!canWrite() || !currentVideoId || !currentVideoElement) return
+      // Live streams have no meaningful offset to resume to.
+      if (!isFinite(currentVideoElement.duration)) return
+      try {
+        await saveProgress(
+          currentVideoId,
+          currentVideoElement.currentTime,
+          currentVideoElement.duration,
+        )
+      } catch (e) {
+        console.warn('saveCurrent: failed to save progress:', e)
+      }
     }
 
     async function initializeVideoTracking() {
@@ -72,7 +90,7 @@ export default defineContentScript({
       const { signal } = videoListenerController
 
       if (isTrackingEnabled) {
-        await loadProgress(currentVideoId, currentVideoElement)
+        await loadProgress(currentVideoId, currentVideoElement, signal)
       }
 
       const setSaveInterval = () => {
@@ -102,13 +120,22 @@ export default defineContentScript({
         'ended',
         async () => {
           clearSaveInterval()
-          if (currentVideoId) {
+          if (!canWrite() || !currentVideoId) return
+          try {
             await videoStorage.remove(currentVideoId)
+          } catch (e) {
+            console.warn('ended: failed to remove video:', e)
           }
         },
         { signal },
       )
-      currentVideoElement.addEventListener('loadedmetadata', setSaveInterval, { signal })
+      currentVideoElement.addEventListener(
+        'loadedmetadata',
+        () => {
+          if (currentVideoElement && !currentVideoElement.paused) setSaveInterval()
+        },
+        { signal },
+      )
 
       if (!currentVideoElement.paused) {
         setSaveInterval()
@@ -116,6 +143,7 @@ export default defineContentScript({
     }
 
     async function attemptInitializationWithRetry() {
+      if (!browser.runtime?.id) return
       if (initializationAttempts < MAX_INITIALIZATION_ATTEMPTS) {
         await initializeVideoTracking()
         initializationAttempts++
