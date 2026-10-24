@@ -21,6 +21,7 @@
     "type-check": "wxt prepare && tsc --noEmit",
     "lint": "eslint src",
     "format": "prettier --write src/",
+    "format:check": "prettier --check src/",
     "postinstall": "wxt prepare",
     "prepare": "husky"
   },
@@ -28,7 +29,8 @@
     "src/**/*.{ts,tsx}": [
       "prettier --write",
       "eslint"
-    ]
+    ],
+    "src/**/*.{css,html}": "prettier --write"
   },
   "dependencies": {
     "react": "^19.3.1",

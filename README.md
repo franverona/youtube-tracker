@@ -31,10 +31,11 @@ A Chrome and Firefox browser extension that automatically tracks your progress o
 5. Click "Load unpacked" and select the extracted folder
 
 **Firefox:**
-1. Download the Firefox release from the [Releases](https://github.com/franverona/youtube-tracker/releases) page
-2. Open Firefox and navigate to `about:addons`
-3. Click the gear icon and select "Install Add-on From File"
-4. Select the downloaded ZIP file
+1. Download the `-firefox.zip` from the [Releases](https://github.com/franverona/youtube-tracker/releases) page
+2. Open Firefox and navigate to `about:debugging#/runtime/this-firefox`
+3. Click "Load Temporary Add-on…" and select the downloaded ZIP file
+
+The release ZIP isn't signed by Mozilla, so release Firefox only loads it temporarily (until restart).
 
 ### For Developers
 
