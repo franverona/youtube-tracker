@@ -81,7 +81,7 @@ Build outputs go to `.output/chrome-mv3/` and `.output/firefox-mv2/`.
 ### Video Tracking Flow
 
 1. **Content Script Initialization** (`src/entrypoints/content.ts`):
-   - Defined via `defineContentScript` with `matches: ['*://*.youtube.com/*']` (YouTube reaches most videos via in-page navigation, so the script must already be present; it bails outside `/watch`)
+   - Defined via `defineContentScript` with `matches: ['https://*.youtube.com/*']` (YouTube reaches most videos via in-page navigation, so the script must already be present; it bails outside `/watch`)
    - Listens for YouTube SPA navigation events (`yt-navigate-finish`, `popstate`)
    - Implements retry logic to handle race conditions with YouTube's dynamic page loading
 
