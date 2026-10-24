@@ -4,6 +4,8 @@ export function getVideoId() {
 }
 
 export function getVideoElement() {
+  // Target the main player explicitly: YouTube can insert ad <video> elements
+  // before it, so a bare querySelector('video') may pick an ad (#43).
   return (
     document.querySelector<HTMLVideoElement>('video.html5-main-video') ??
     document.querySelector<HTMLVideoElement>('#movie_player video')
