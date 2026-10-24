@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Implement every change (fix, improvement, feature, etc.) on a new branch created from an up-to-date `main` — never commit directly to `main`.
 - Each change gets its own branch and its own PR — always open a PR.
 - A PR must not be merged until CI passes successfully.
+- Never add Claude/Anthropic attribution: no `Co-Authored-By` trailer in commits and no "Generated with Claude Code" line in PR descriptions.
 
 ## Project Overview
 
@@ -80,7 +81,7 @@ Build outputs go to `.output/chrome-mv3/` and `.output/firefox-mv2/`.
 ### Video Tracking Flow
 
 1. **Content Script Initialization** (`src/entrypoints/content.ts`):
-   - Defined via `defineContentScript` with `matches: ['*://*.youtube.com/watch*']`
+   - Defined via `defineContentScript` with `matches: ['*://*.youtube.com/*']` (YouTube reaches most videos via in-page navigation, so the script must already be present; it bails outside `/watch`)
    - Listens for YouTube SPA navigation events (`yt-navigate-finish`, `popstate`)
    - Implements retry logic to handle race conditions with YouTube's dynamic page loading
 
@@ -94,7 +95,7 @@ Build outputs go to `.output/chrome-mv3/` and `.output/firefox-mv2/`.
 3. **Storage Layer** (`src/storage/videoStorage.ts`, exported via `@/storage`):
    - Uses `wxt/utils/storage` — `storage.defineItem<VideoStateType>('local:video-storage')`
    - `videoStorageItem` is the raw WXT storage item (used for `.watch()` in the shared hook)
-   - `videoStorage` is a convenience wrapper with `getById`, `save`, `remove` — writes are serialized through an internal queue to avoid clobbering concurrent saves
+   - `videoStorage` is a convenience wrapper with `getById`, `save`, `remove`, `clear`, `import` — writes are sent via `runtime.sendMessage` to the background, which applies them through a single queue (`applyVideoStorageWrite`) so tabs, popup and options can't clobber each other
    - `trackingEnabledItem` (`local:tracking-enabled`, boolean, default `true`) is the global on/off switch checked by the content script before loading/saving progress
    - Each video entry contains: `id`, `progress` (currentTime in seconds), `duration?`, `timestamp`, `title`, `url`
    - `isValidVideoState()` validates untrusted data (used by the options page's JSON import)
@@ -111,6 +112,8 @@ Build outputs go to `.output/chrome-mv3/` and `.output/firefox-mv2/`.
 
 6. **Background** (`src/entrypoints/background.ts`):
    - Sets the toolbar badge to the tracked-video count, or a gray "paused" indicator when `trackingEnabledItem` is `false`
+   - Handles all video-storage writes sent by other contexts (`isVideoStorageWrite` / `applyVideoStorageWrite`)
+   - Uses `browser.action ?? browser.browserAction` (Firefox MV2 only has `browserAction`)
    - Registers the `toggle-tracking` command (default shortcut `Alt+Shift+Y`, declared in `wxt.config.ts`) to flip `trackingEnabledItem` without opening the popup
 
 ### Build System
@@ -134,7 +137,7 @@ Build outputs go to `.output/chrome-mv3/` and `.output/firefox-mv2/`.
 
 - **Vitest** (`vitest.config.ts`) — unit tests run with `pnpm run test`
 - **jsdom** environment — DOM APIs are available in tests without a browser
-- Test files live alongside the source files they test (`*.test.ts`)
+- Test files live alongside the source files they test (`*.test.ts`), except tests for top-level entrypoints (`content.ts`, `background.ts`), which live in `src/test/` because WXT treats every file at the root of `entrypoints/` as an entrypoint
 - `src/test/setup.ts` is the global setup file (currently suppresses `console.warn`)
 - `wxt/utils/storage` must be mocked in tests because it relies on the browser extension runtime
 

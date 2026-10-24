@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { videoStorage, type VideoDetails } from '@/storage'
 import { loadProgress, saveProgress } from './videoUtils'
+import { getVideoId } from './youtubeUtils'
 
 vi.mock('@/storage', () => ({
   videoStorage: {
@@ -11,6 +12,7 @@ vi.mock('@/storage', () => ({
 
 vi.mock('./youtubeUtils', () => ({
   getVideoTitle: vi.fn(() => 'Test Title'),
+  getVideoId: vi.fn(() => 'abc123'),
 }))
 
 function createMockVideo(overrides: Partial<HTMLVideoElement> = {}): HTMLVideoElement {
@@ -136,5 +138,46 @@ describe('loadProgress', () => {
     const video = createMockVideo({ readyState: 4, paused: true })
     await loadProgress('abc123', video)
     expect(video.play).toHaveBeenCalled()
+  })
+
+  const stored: VideoDetails = { id: 'abc123', progress: 50, timestamp: 1000, title: 'T', url: 'u' }
+
+  it('does not resume when the URL has an explicit start time', async () => {
+    vi.mocked(videoStorage.getById).mockResolvedValue(stored)
+    window.history.replaceState(null, '', '/watch?v=abc123&t=120')
+    const video = createMockVideo()
+    await loadProgress('abc123', video)
+    window.history.replaceState(null, '', '/')
+    expect(video.currentTime).toBe(0)
+  })
+
+  it('does not seek live streams', async () => {
+    vi.mocked(videoStorage.getById).mockResolvedValue(stored)
+    const video = createMockVideo({ duration: Infinity })
+    await loadProgress('abc123', video)
+    expect(video.currentTime).toBe(0)
+  })
+
+  it('does not seek when YouTube already switched to another video', async () => {
+    vi.mocked(getVideoId).mockReturnValueOnce('other')
+    vi.mocked(videoStorage.getById).mockResolvedValue(stored)
+    const video = createMockVideo()
+    await loadProgress('abc123', video)
+    expect(video.currentTime).toBe(0)
+  })
+
+  it('drops pending listeners when the signal aborts', async () => {
+    vi.mocked(videoStorage.getById).mockResolvedValue(stored)
+    const video = document.createElement('video')
+    Object.defineProperty(video, 'readyState', { value: 0, writable: true })
+    Object.defineProperty(video, 'duration', { value: 300 })
+    video.play = vi.fn().mockResolvedValue(undefined)
+    const controller = new AbortController()
+    await loadProgress('abc123', video, controller.signal)
+    controller.abort()
+    Object.defineProperty(video, 'readyState', { value: 4 })
+    video.dispatchEvent(new Event('loadeddata'))
+    expect(video.currentTime).toBe(0)
+    expect(video.play).not.toHaveBeenCalled()
   })
 })

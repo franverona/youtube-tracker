@@ -1,5 +1,5 @@
 import { videoStorage, type VideoDetails } from '@/storage'
-import { getVideoTitle } from './youtubeUtils'
+import { getVideoId, getVideoTitle } from './youtubeUtils'
 
 export async function saveProgress(videoId: string, progress: number, duration?: number) {
   if (!videoId || isNaN(progress) || progress < 0) {
@@ -18,11 +18,19 @@ export async function saveProgress(videoId: string, progress: number, duration?:
   await videoStorage.save(videoId, videoDetails)
 }
 
-export async function loadProgress(videoId: string, videoElement: HTMLVideoElement) {
+export async function loadProgress(
+  videoId: string,
+  videoElement: HTMLVideoElement,
+  signal?: AbortSignal,
+) {
   if (!videoId || !videoElement) {
     console.warn('loadProgress: Missing video ID or video element.')
     return
   }
+
+  // An explicit start time in the link wins over the saved position.
+  const params = new URLSearchParams(window.location.search)
+  if (params.has('t') || params.has('start')) return
 
   const videoDetails = await videoStorage.getById(videoId)
   if (!videoDetails) return
@@ -31,13 +39,20 @@ export async function loadProgress(videoId: string, videoElement: HTMLVideoEleme
   if (progress <= 0) return
 
   const trySetProgress = () => {
+    // Stale listener: the tracker moved on, or YouTube already loaded another
+    // video into this reused element.
+    if (signal?.aborted || getVideoId() !== videoId) return
+    // HAVE_CURRENT_DATA: seeking before this is unreliable.
     if (videoElement.readyState < 2) return
 
     videoElement.removeEventListener('loadeddata', trySetProgress)
     videoElement.removeEventListener('canplaythrough', trySetProgress)
     videoElement.removeEventListener('loadedmetadata', trySetProgress)
 
-    if (videoElement.duration && videoElement.duration - progress < 5) return
+    // Live streams: stay at the live edge.
+    if (!isFinite(videoElement.duration)) return
+    // Within 5s of the end: let it start over instead of landing on the end screen.
+    if (videoElement.duration - progress < 5) return
 
     videoElement.currentTime = progress
 
@@ -48,9 +63,9 @@ export async function loadProgress(videoId: string, videoElement: HTMLVideoEleme
     }
   }
 
-  videoElement.addEventListener('loadeddata', trySetProgress)
-  videoElement.addEventListener('canplaythrough', trySetProgress)
-  videoElement.addEventListener('loadedmetadata', trySetProgress)
+  videoElement.addEventListener('loadeddata', trySetProgress, { signal })
+  videoElement.addEventListener('canplaythrough', trySetProgress, { signal })
+  videoElement.addEventListener('loadedmetadata', trySetProgress, { signal })
 
   trySetProgress()
 }
