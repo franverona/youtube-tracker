@@ -48,6 +48,11 @@ describe('saveProgress', () => {
     expect(videoStorage.save).not.toHaveBeenCalled()
   })
 
+  it('does nothing below the minimum progress threshold', async () => {
+    await saveProgress('abc123', 14.9)
+    expect(videoStorage.save).not.toHaveBeenCalled()
+  })
+
   it('calls videoStorage.save with the correct data', async () => {
     await saveProgress('abc123', 42)
     expect(videoStorage.save).toHaveBeenCalledWith(

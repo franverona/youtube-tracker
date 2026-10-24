@@ -22,6 +22,7 @@ async function start(trackingEnabled = true) {
   const video = document.createElement('video')
   video.className = 'html5-main-video'
   Object.defineProperty(video, 'duration', { value: 300, configurable: true })
+  Object.defineProperty(video, 'currentTime', { value: 120, writable: true })
   document.body.append(video)
   await (contentScript as unknown as { main: () => Promise<void> }).main()
   await flush()

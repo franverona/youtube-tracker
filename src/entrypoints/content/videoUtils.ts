@@ -1,11 +1,15 @@
 import { videoStorage, type VideoDetails } from '@/storage'
 import { getVideoId, getVideoTitle } from './youtubeUtils'
 
+// Skip previews and misclicks so they don't clutter the list and badge.
+export const MIN_SAVED_PROGRESS = 15
+
 export async function saveProgress(videoId: string, progress: number, duration?: number) {
   if (!videoId || isNaN(progress) || progress < 0) {
     console.warn('saveProgress: Missing video ID or current time.')
     return
   }
+  if (progress < MIN_SAVED_PROGRESS) return
 
   const videoDetails: VideoDetails = {
     id: videoId,
