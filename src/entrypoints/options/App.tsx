@@ -1,7 +1,7 @@
 import { useRef, useMemo, useState } from 'react'
 import { isValidVideoState, videoStorage, videoStorageItem } from '@/storage'
 import { formatTime, timeAgo } from '../../utils'
-import { useVideoStorage } from '@/hooks'
+import { useUndo, useVideoStorage } from '@/hooks'
 
 function getThumbnail(id: string) {
   return `https://i.ytimg.com/vi/${id}/mqdefault.jpg`
@@ -17,13 +17,20 @@ export default function App() {
   )
   const [importStatus, setImportStatus] = useState<{ ok: boolean; message: string } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const { message, remember, undo } = useUndo()
+
+  function removeVideo(id: string) {
+    if (videos?.[id]) remember('Video removed', { [id]: videos[id] })
+    videoStorage.remove(id)
+  }
 
   async function clearAll() {
     if (!sortedVideos || sortedVideos.length === 0) return
     const confirmed = window.confirm(
-      `Remove all ${sortedVideos.length} tracked video${sortedVideos.length !== 1 ? 's' : ''}? This cannot be undone.`,
+      `Remove all ${sortedVideos.length} tracked video${sortedVideos.length !== 1 ? 's' : ''}?`,
     )
-    if (!confirmed) return
+    if (!confirmed || !videos) return
+    remember(`Removed ${sortedVideos.length} video${sortedVideos.length !== 1 ? 's' : ''}`, videos)
     await videoStorage.clear()
   }
 
@@ -66,6 +73,17 @@ export default function App() {
   }
 
   if (!sortedVideos) return null
+
+  const undoToast = message && (
+    <div className="fixed inset-x-2 bottom-2 flex items-center justify-between rounded-md bg-gray-900 px-3 py-2 text-sm text-white shadow-lg dark:bg-gray-100 dark:text-gray-900">
+      <span>{message}</span>
+      <button
+        onClick={undo}
+        className="font-semibold text-red-400 hover:text-red-300 dark:text-red-600 dark:hover:text-red-700">
+        Undo
+      </button>
+    </div>
+  )
 
   return (
     <div className="mx-auto max-w-4xl p-8">
@@ -165,7 +183,7 @@ export default function App() {
 
                 {/* Delete */}
                 <button
-                  onClick={() => videoStorage.remove(id)}
+                  onClick={() => removeVideo(id)}
                   className="rounded p-1.5 text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400"
                   title="Remove">
                   <svg
@@ -186,6 +204,7 @@ export default function App() {
           })}
         </div>
       )}
+      {undoToast}
     </div>
   )
 }

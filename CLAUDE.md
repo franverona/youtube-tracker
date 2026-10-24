@@ -176,7 +176,7 @@ Pushing a `v*` tag runs `.github/workflows/release.yml`: it checks the tag match
 ### Popup vs Options
 - Popup (`src/entrypoints/popup/`) is the quick-glance view: recent videos, tracking toggle, link to options
 - Options page (`src/entrypoints/options/`) is the full management view: all videos, export/import, clear all
-- Both share `useVideoStorage` from `src/hooks/`
+- Both share `useVideoStorage` and `useUndo` from `src/hooks/`; `useUndo` keeps the last removal (single delete or Clear all) in memory for 5s and restores it via `videoStorage.import`
 
 ### Multi-Browser Support
 - Chrome builds target MV3, Firefox targets MV2 — WXT handles this automatically
