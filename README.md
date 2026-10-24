@@ -12,6 +12,8 @@ A Chrome and Firefox browser extension that automatically tracks your progress o
   - Short videos (<15 min): Saves every 5 seconds
   - Long videos (≥15 min): Saves every 30 seconds
 - **Cross-Session Persistence**: Your progress is saved even if you close the browser
+- **Only What Matters**: Nothing is saved before 15 seconds, videos in their last 5% (up to 60s) count as finished and are removed, live streams are skipped, and links with an explicit `&t=` start time are respected
+- **Undo**: Removing a video (or clearing all) can be undone for 5 seconds
 - **YouTube SPA Support**: Works seamlessly with YouTube's navigation without page reloads
 - **Pause/Resume Tracking**: Toggle tracking from the popup, or instantly with the `Alt+Shift+Y` keyboard shortcut — no need to open the popup
 - **At-a-Glance Status**: The toolbar icon badge shows your tracked video count, or a paused indicator when tracking is off
@@ -22,6 +24,8 @@ A Chrome and Firefox browser extension that automatically tracks your progress o
 ## Installation
 
 ### For End Users
+
+Releases are published from `v*` tags. If none is listed yet, build from source (see [For Developers](#for-developers)) and load `.output/chrome-mv3/` or `.output/firefox-mv2/`.
 
 **Chrome/Edge:**
 1. Download the latest release from the [Releases](https://github.com/franverona/youtube-tracker/releases) page
@@ -87,6 +91,10 @@ pnpm run type-check
 
 # Lint
 pnpm run lint
+
+# Format with Prettier / check formatting (CI runs the check)
+pnpm run format
+pnpm run format:check
 ```
 
 ### Project Structure
@@ -113,14 +121,22 @@ youtube-tracker/
 │   │       ├── App.tsx         # Options page: full list, export/import, clear all
 │   │       └── App.css
 │   ├── hooks/
-│   │   └── useVideoStorage.ts  # Shared React hook for live storage updates
+│   │   ├── index.ts
+│   │   ├── useVideoStorage.ts  # Shared React hook for live storage updates
+│   │   ├── useUndo.ts          # Undo for removals (popup + options)
+│   │   └── useUndo.test.tsx
 │   ├── storage/
+│   │   ├── index.ts            # Barrel, imported as `@/storage`
 │   │   ├── videoStorage.ts     # Storage abstraction (wxt/utils/storage)
 │   │   └── videoStorage.test.ts
-│   ├── utils.ts                 # formatTime / timeAgo
+│   ├── utils.ts                # formatTime / timeAgo
+│   ├── utils.test.ts
 │   └── test/
-│       └── setup.ts            # Vitest global setup (suppress console.warn)
+│       ├── setup.ts            # Vitest global setup (suppress console.warn)
+│       ├── content.test.ts     # Content script tests
+│       └── background.test.ts  # Background script tests
 ├── public/
+│   ├── icon.svg
 │   ├── icon-16.png
 │   ├── icon-48.png
 │   └── icon-128.png
@@ -130,11 +146,12 @@ youtube-tracker/
 ### Tech Stack
 
 - **Framework**: [WXT](https://wxt.dev) + React 19
-- **Language**: TypeScript 5.8
+- **Language**: TypeScript 6
 - **Styling**: Tailwind CSS 4
 - **Build Tool**: Vite (via WXT)
 - **Testing**: Vitest with jsdom environment
-- **Linting**: ESLint 9 with typescript-eslint, react-hooks, stylistic, and import plugins
+- **Linting**: ESLint 9 (`eslint.config.mjs`) with typescript-eslint, react, react-hooks, and eslint-config-prettier
+- **Formatting**: Prettier (with the Tailwind CSS plugin)
 - **Git Hooks**: Husky — lint-staged on pre-commit, commitlint on commit-msg
 
 ### How It Works
@@ -147,32 +164,37 @@ youtube-tracker/
    - `play`: Starts periodic progress saving
    - `pause`: Saves progress immediately
    - `ended`: Clears saved progress for that video
-   - `beforeunload`: Saves progress before tab close
+
+   Nothing is saved before 15 seconds of progress. In the last 5% of a video (capped at 60 seconds) a save removes the entry instead, so leaving on the credits or end screen counts as finished. Live streams aren't tracked.
 
 4. **Resume on Load**: When you revisit a video, the script:
-   - Retrieves saved progress from Chrome storage
+   - Retrieves saved progress from the extension's local storage (`storage.local`)
    - Waits for video metadata to load
-   - Sets the `currentTime` to resume playback
+   - Sets the `currentTime` to resume playback, unless the URL has an explicit `t=`/`start=` time
 
-5. **Storage**: Progress data is stored in Chrome's local storage with this structure:
+5. **Storage**: Data lives in the extension's `storage.local` under two keys:
    ```typescript
    {
-     [videoId]: {
-       id: string
-       progress: number      // Time in seconds
-       duration?: number     // Video length in seconds
-       timestamp: number     // Last save time
-       title: string
-       url: string
-     }
+     'video-storage': {
+       [videoId]: {
+         id: string
+         progress: number      // Time in seconds
+         duration?: number     // Video length in seconds
+         timestamp: number     // Last save time
+         title: string
+         url: string
+       }
+     },
+     'tracking-enabled': boolean  // default: true
    }
    ```
+   All writes (from every tab, the popup and the options page) are sent to the background script, which applies them one at a time so concurrent saves can't overwrite each other.
 
 6. **Pause/Resume**: A separate `tracking-enabled` flag (default: on) gates loading and saving. Toggle it from the popup switch or the `Alt+Shift+Y` shortcut — the content script checks it before touching video progress, and the toolbar badge reflects the current state.
 
 ## Browser Support
 
-- ✅ Chrome 109+
+- ✅ Chrome 110+
 - ✅ Firefox 109+
 - ✅ Edge (Chromium-based)
 
@@ -185,7 +207,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes
-4. Run tests, type checking, and linting (`pnpm run test && pnpm run type-check && pnpm run lint`) — matches what CI checks
+4. Run the same checks as CI: `pnpm run test && pnpm run type-check && pnpm run lint && pnpm run format:check && pnpm run build && pnpm run build:firefox`
 5. Commit using [Conventional Commits](https://www.conventionalcommits.org/) format (enforced automatically): `git commit -m 'feat: add amazing feature'`
 6. Push to the branch (`git push origin feature/amazing-feature`)
 7. Open a Pull Request

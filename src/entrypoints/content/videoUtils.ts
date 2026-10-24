@@ -60,6 +60,8 @@ export async function loadProgress(
 
     videoElement.currentTime = progress
 
+    // Only force playback when there's a real position to resume; a near-zero
+    // entry shouldn't override the user's autoplay-off choice.
     if (videoElement.paused && progress > 1) {
       videoElement.play().catch((e) => {
         console.warn('loadProgress: Autoplay prevented:', e)
