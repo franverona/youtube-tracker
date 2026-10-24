@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { trackingEnabledItem, videoStorage } from '@/storage'
 import { formatTime, timeAgo } from '../../utils'
-import { useVideoStorage } from '@/hooks'
+import { useUndo, useVideoStorage } from '@/hooks'
 
 function getThumbnail(id: string) {
   return `https://i.ytimg.com/vi/${id}/mqdefault.jpg`
@@ -27,6 +27,23 @@ export default function App() {
   const sortedVideos = useMemo(
     () => (videos ? Object.values(videos).sort((a, b) => b.timestamp - a.timestamp) : null),
     [videos],
+  )
+  const { message, remember, undo } = useUndo()
+
+  function removeVideo(id: string) {
+    if (videos?.[id]) remember('Video removed', { [id]: videos[id] })
+    videoStorage.remove(id)
+  }
+
+  const undoToast = message && (
+    <div className="fixed inset-x-2 bottom-2 flex items-center justify-between rounded-md bg-gray-900 px-3 py-2 text-sm text-white shadow-lg dark:bg-gray-100 dark:text-gray-900">
+      <span>{message}</span>
+      <button
+        onClick={undo}
+        className="font-semibold text-red-400 hover:text-red-300 dark:text-red-600 dark:hover:text-red-700">
+        Undo
+      </button>
+    </div>
   )
 
   const trackingToggle = (
@@ -81,6 +98,7 @@ export default function App() {
             Watch a YouTube video to get started
           </p>
         </div>
+        {undoToast}
       </div>
     )
   }
@@ -145,7 +163,7 @@ export default function App() {
                     {timeAgo(timestamp)}
                   </span>
                   <button
-                    onClick={() => videoStorage.remove(id)}
+                    onClick={() => removeVideo(id)}
                     className="rounded p-0.5 text-gray-400 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400"
                     title="Remove">
                     <svg
@@ -167,6 +185,7 @@ export default function App() {
           )
         })}
       </div>
+      {undoToast}
     </div>
   )
 }
