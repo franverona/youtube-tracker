@@ -70,6 +70,30 @@ describe('content script', () => {
     expect(videoStorage.remove).not.toHaveBeenCalled()
   })
 
+  it('removes instead of saving when the video is nearly finished', async () => {
+    vi.mocked(videoStorage.getById).mockResolvedValue({
+      id: A,
+      progress: 100,
+      timestamp: 1,
+      title: 'T',
+      url: 'u',
+    })
+    const video = await start()
+    Object.defineProperty(video, 'currentTime', { value: 290 })
+    video.dispatchEvent(new Event('pause'))
+    await flush()
+    expect(videoStorage.save).not.toHaveBeenCalled()
+    expect(videoStorage.remove).toHaveBeenCalledWith(A)
+  })
+
+  it("doesn't send a remove when a nearly finished video has no entry", async () => {
+    const video = await start()
+    Object.defineProperty(video, 'currentTime', { value: 290 })
+    video.dispatchEvent(new Event('pause'))
+    await flush()
+    expect(videoStorage.remove).not.toHaveBeenCalled()
+  })
+
   it("doesn't save live streams", async () => {
     const video = await start()
     Object.defineProperty(video, 'duration', { value: Infinity })
