@@ -50,14 +50,18 @@ export default defineContentScript({
 
     async function saveCurrent() {
       if (!canWrite() || !currentVideoId || !currentVideoElement) return
+      const { currentTime, duration } = currentVideoElement
       // Live streams have no meaningful offset to resume to.
-      if (!isFinite(currentVideoElement.duration)) return
+      if (!isFinite(duration)) return
       try {
-        await saveProgress(
-          currentVideoId,
-          currentVideoElement.currentTime,
-          currentVideoElement.duration,
-        )
+        // In the last 5% (capped at 60s, i.e. credits / end screen) treat the
+        // video as finished, like `ended`: people often leave without letting
+        // it reach the real end, and resume would skip that spot anyway.
+        if (duration - currentTime < Math.min(duration * 0.05, 60)) {
+          if (await videoStorage.getById(currentVideoId)) await videoStorage.remove(currentVideoId)
+          return
+        }
+        await saveProgress(currentVideoId, currentTime, duration)
       } catch (e) {
         console.warn('saveCurrent: failed to save progress:', e)
       }
