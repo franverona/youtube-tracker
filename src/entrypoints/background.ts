@@ -51,6 +51,10 @@ export default defineBackground(() => {
     updateBadge()
   })
 
+  // MV3 only wakes the service worker at browser launch if this listener exists;
+  // the setup above then restores the badge, which Chrome doesn't persist.
+  browser.runtime.onStartup.addListener(() => {})
+
   browser.commands.onCommand.addListener(async (command) => {
     if (command !== 'toggle-tracking') return
     const enabled = await trackingEnabledItem.getValue()
