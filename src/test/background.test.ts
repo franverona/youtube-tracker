@@ -14,7 +14,7 @@ describe('background', () => {
     const browserAction = { setBadgeTextColor: vi.fn() }
     vi.stubGlobal('browser', {
       browserAction,
-      runtime: { onMessage: { addListener: vi.fn() } },
+      runtime: { onMessage: { addListener: vi.fn() }, onStartup: { addListener: vi.fn() } },
       commands: { onCommand: { addListener: vi.fn() } },
     })
     const { default: background } = await import('@/entrypoints/background')
