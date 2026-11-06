@@ -157,6 +157,18 @@ export default defineContentScript({
       }
     }
 
+    // YouTube can replace the main <video> without navigating, leaving our
+    // listeners on a detached element. Media events don't bubble, so capture.
+    document.addEventListener(
+      'play',
+      (e) => {
+        if (e.target !== currentVideoElement && e.target === getVideoElement()) {
+          initializeVideoTracking()
+        }
+      },
+      true,
+    )
+
     document.addEventListener('yt-navigate-finish', () => {
       initializationAttempts = 0
       setTimeout(attemptInitializationWithRetry, INITIALIZATION_RETRY_DELAY)
