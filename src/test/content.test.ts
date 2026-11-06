@@ -50,6 +50,21 @@ describe('content script', () => {
     expect(videoStorage.save).toHaveBeenCalledWith(A, expect.objectContaining({ id: A }))
   })
 
+  it('follows YouTube replacing the main video element', async () => {
+    const old = await start()
+    old.remove()
+    const video = document.createElement('video')
+    video.className = 'html5-main-video'
+    Object.defineProperty(video, 'duration', { value: 300 })
+    Object.defineProperty(video, 'currentTime', { value: 120, writable: true })
+    document.body.append(video)
+    video.dispatchEvent(new Event('play'))
+    await flush()
+    video.dispatchEvent(new Event('pause'))
+    await flush()
+    expect(videoStorage.save).toHaveBeenCalledWith(A, expect.objectContaining({ progress: 120 }))
+  })
+
   it("doesn't save the next video's position under the previous id after SPA nav", async () => {
     const video = await start()
     window.history.pushState(null, '', '/watch?v=BBBBBBBBBBB')
