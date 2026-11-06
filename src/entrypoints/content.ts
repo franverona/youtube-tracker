@@ -40,12 +40,19 @@ export default defineContentScript({
     // False when tracking is paused, the extension was reloaded (orphaned
     // script), or YouTube already swapped the reused <video> to the next video
     // but re-init hasn't run yet — saving then would write B's time under A.
+    // Also false during an ad: it plays in the same <video>, so its time and
+    // `ended` would be taken as the video's.
     function canWrite(): boolean {
       if (!browser.runtime?.id) {
         teardown()
         return false
       }
-      return isTrackingEnabled && !!currentVideoId && getVideoId() === currentVideoId
+      return (
+        isTrackingEnabled &&
+        !!currentVideoId &&
+        getVideoId() === currentVideoId &&
+        !document.querySelector('#movie_player.ad-showing')
+      )
     }
 
     async function saveCurrent() {
