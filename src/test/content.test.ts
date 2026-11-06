@@ -65,6 +65,19 @@ describe('content script', () => {
     expect(videoStorage.save).toHaveBeenCalledWith(A, expect.objectContaining({ progress: 120 }))
   })
 
+  it("doesn't save or remove while an ad is playing", async () => {
+    const video = await start()
+    const player = document.createElement('div')
+    player.id = 'movie_player'
+    player.className = 'ad-showing'
+    document.body.append(player)
+    video.dispatchEvent(new Event('pause'))
+    video.dispatchEvent(new Event('ended'))
+    await flush()
+    expect(videoStorage.save).not.toHaveBeenCalled()
+    expect(videoStorage.remove).not.toHaveBeenCalled()
+  })
+
   it("doesn't save the next video's position under the previous id after SPA nav", async () => {
     const video = await start()
     window.history.pushState(null, '', '/watch?v=BBBBBBBBBBB')
