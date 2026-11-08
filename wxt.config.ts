@@ -25,6 +25,10 @@ export default defineConfig({
         suggested_key: { default: 'Alt+Shift+Y' },
         description: 'Enable/pause YouTube Tracker',
       },
+      'resume-last-video': {
+        suggested_key: { default: 'Alt+Shift+L' },
+        description: 'Open the most recently watched video where you left off',
+      },
     },
     browser_specific_settings: {
       gecko: {

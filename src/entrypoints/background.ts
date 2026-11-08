@@ -56,8 +56,14 @@ export default defineBackground(() => {
   browser.runtime.onStartup.addListener(() => {})
 
   browser.commands.onCommand.addListener(async (command) => {
-    if (command !== 'toggle-tracking') return
-    const enabled = await trackingEnabledItem.getValue()
-    await trackingEnabledItem.setValue(!enabled)
+    if (command === 'toggle-tracking') {
+      const enabled = await trackingEnabledItem.getValue()
+      await trackingEnabledItem.setValue(!enabled)
+    } else if (command === 'resume-last-video') {
+      const state = await videoStorageItem.getValue()
+      const last = Object.values(state).sort((a, b) => b.timestamp - a.timestamp)[0]
+      // The content script resumes it on load, like any other visit.
+      if (last) await browser.tabs.create({ url: last.url })
+    }
   })
 })
