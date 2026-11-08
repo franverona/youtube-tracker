@@ -171,6 +171,13 @@ describe('loadProgress', () => {
     expect(video.currentTime).toBe(0)
   })
 
+  it("doesn't seek back a video that is already playing past the saved spot", async () => {
+    vi.mocked(videoStorage.getById).mockResolvedValue(stored)
+    const video = createMockVideo({ currentTime: 900 })
+    await loadProgress('abc123', video)
+    expect(video.currentTime).toBe(900)
+  })
+
   it('waits for a pre-roll ad to finish before resuming', async () => {
     vi.mocked(videoStorage.getById).mockResolvedValue(stored)
     const player = document.createElement('div')

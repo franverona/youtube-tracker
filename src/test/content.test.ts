@@ -50,6 +50,13 @@ describe('content script', () => {
     expect(videoStorage.save).toHaveBeenCalledWith(A, expect.objectContaining({ id: A }))
   })
 
+  it('saves when navigation starts, before the URL leaves the video', async () => {
+    await start()
+    document.dispatchEvent(new Event('yt-navigate-start'))
+    await flush()
+    expect(videoStorage.save).toHaveBeenCalledWith(A, expect.objectContaining({ progress: 120 }))
+  })
+
   it('follows YouTube replacing the main video element', async () => {
     const old = await start()
     old.remove()

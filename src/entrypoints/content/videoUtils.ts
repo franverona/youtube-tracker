@@ -56,6 +56,9 @@ export async function loadProgress(
     videoElement.removeEventListener('canplaythrough', trySetProgress)
     videoElement.removeEventListener('loadedmetadata', trySetProgress)
 
+    // Already playing (e.g. the miniplayer expanded back to /watch): seeking
+    // to the last save would jump backwards.
+    if (videoElement.currentTime > MIN_SAVED_PROGRESS) return
     // Live streams: stay at the live edge.
     if (!isFinite(videoElement.duration)) return
     // Within 5s of the end: let it start over instead of landing on the end screen.
