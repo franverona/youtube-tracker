@@ -51,7 +51,8 @@ export default defineContentScript({
     // but re-init hasn't run yet — saving then would write B's time under A.
     // Also false during an ad: it plays in the same <video>, so its time and
     // `ended` would be taken as the video's.
-    function canWrite(): boolean {
+    // `skipUrlCheck` is only for yt-navigate-start (see there).
+    function canWrite({ skipUrlCheck = false } = {}): boolean {
       if (!browser.runtime?.id) {
         teardown()
         return false
@@ -60,13 +61,13 @@ export default defineContentScript({
         isTrackingEnabled &&
         !!currentVideoId &&
         !isIgnored(currentVideoId) &&
-        getVideoId() === currentVideoId &&
+        (skipUrlCheck || getVideoId() === currentVideoId) &&
         !document.querySelector('#movie_player.ad-showing')
       )
     }
 
-    async function saveCurrent() {
-      if (!canWrite() || !currentVideoId || !currentVideoElement) return
+    async function saveCurrent({ skipUrlCheck = false } = {}) {
+      if (!canWrite({ skipUrlCheck }) || !currentVideoId || !currentVideoElement) return
       const { currentTime, duration } = currentVideoElement
       // Live streams have no meaningful offset to resume to.
       if (!isFinite(duration)) return
@@ -208,10 +209,12 @@ export default defineContentScript({
       true,
     )
 
-    // Fires while the URL still names the current video, so leaving /watch
-    // (e.g. into the miniplayer, which isn't tracked) keeps the real position.
+    // Save the real position when leaving a video (e.g. to the home page or the
+    // miniplayer, which isn't tracked). YouTube has usually already changed the
+    // URL by now, but the <video> still holds the current video — it's only
+    // reset once the next page's data loads — so skip just the URL check.
     document.addEventListener('yt-navigate-start', () => {
-      saveCurrent()
+      saveCurrent({ skipUrlCheck: true })
     })
 
     document.addEventListener('yt-navigate-finish', () => {

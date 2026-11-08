@@ -52,8 +52,10 @@ describe('content script', () => {
     expect(videoStorage.save).toHaveBeenCalledWith(A, expect.objectContaining({ id: A }))
   })
 
-  it('saves when navigation starts, before the URL leaves the video', async () => {
+  it('saves under the current id when navigation starts, even if the URL already changed', async () => {
     await start()
+    // As observed on YouTube: by yt-navigate-start the URL already points elsewhere.
+    window.history.pushState(null, '', '/')
     document.dispatchEvent(new Event('yt-navigate-start'))
     await flush()
     expect(videoStorage.save).toHaveBeenCalledWith(A, expect.objectContaining({ progress: 120 }))
