@@ -45,3 +45,10 @@ it('expires after the timeout', async () => {
   await act(() => undo.undo())
   expect(videoStorage.import).not.toHaveBeenCalled()
 })
+
+it('keeps the toast when the restore fails', async () => {
+  vi.mocked(videoStorage.import).mockRejectedValueOnce(new Error('quota'))
+  act(() => undo.remember('Video removed', { [entry.id]: entry }))
+  await act(() => undo.undo())
+  expect(undo.message).toBe('Video removed')
+})

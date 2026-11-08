@@ -19,10 +19,15 @@ export function useUndo() {
     remember: (message: string, removed: VideoStateType) => setPending({ message, removed }),
     undo: async () => {
       if (!pending) return
-      setPending(null)
-      // Import merges per id keeping the newer entry, so anything re-saved
-      // since the removal isn't rolled back.
-      await videoStorage.import(pending.removed)
+      try {
+        // Import merges per id keeping the newer entry, so anything re-saved
+        // since the removal isn't rolled back.
+        await videoStorage.import(pending.removed)
+        setPending(null)
+      } catch (e) {
+        // Keep the toast so the user can retry until it times out.
+        console.warn('undo: failed to restore:', e)
+      }
     },
   }
 }

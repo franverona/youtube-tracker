@@ -103,7 +103,12 @@ export default defineContentScript({
       const { signal } = videoListenerController
 
       if (isTrackingEnabled && !isSameVideo) {
-        await loadProgress(currentVideoId, currentVideoElement, signal)
+        try {
+          await loadProgress(currentVideoId, currentVideoElement, signal)
+        } catch (e) {
+          // Still attach the save listeners below.
+          console.warn('initializeVideoTracking: failed to load progress:', e)
+        }
       }
 
       const setSaveInterval = () => {
