@@ -141,6 +141,11 @@ describe('isValidVideoState', () => {
     expect(valid({ timestamp: NaN })).toBe(false)
   })
 
+  it('rejects timestamps more than a day in the future', () => {
+    expect(valid({ timestamp: Date.now() + 60 * 60 * 1000 })).toBe(true)
+    expect(valid({ timestamp: Date.now() + 2 * 24 * 60 * 60 * 1000 })).toBe(false)
+  })
+
   it('rejects urls outside youtube.com', () => {
     expect(valid({ url: 'https://example.com' })).toBe(false)
     expect(valid({ url: 'https://www.youtube.com.evil.com/' })).toBe(false)

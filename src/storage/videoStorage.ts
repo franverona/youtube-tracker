@@ -92,8 +92,13 @@ export const videoStorage = {
 
 const isNonNegativeNumber = (v: unknown) => typeof v === 'number' && isFinite(v) && v >= 0
 
+// Allows for clock skew between machines; a far-future timestamp would sort
+// first forever and win every later import merge.
+const MAX_TIMESTAMP_SKEW_MS = 24 * 60 * 60 * 1000
+
 export function isValidVideoState(data: unknown): data is VideoStateType {
   if (typeof data !== 'object' || data === null || Array.isArray(data)) return false
+  const maxTimestamp = Date.now() + MAX_TIMESTAMP_SKEW_MS
   return Object.entries(data).every(([key, entry]) => {
     if (typeof entry !== 'object' || entry === null) return false
     const { id, progress, duration, timestamp, title, url } = entry as Record<string, unknown>
@@ -104,6 +109,7 @@ export function isValidVideoState(data: unknown): data is VideoStateType {
       isNonNegativeNumber(progress) &&
       (duration === undefined || (isNonNegativeNumber(duration) && (duration as number) > 0)) &&
       isNonNegativeNumber(timestamp) &&
+      (timestamp as number) <= maxTimestamp &&
       typeof title === 'string' &&
       typeof url === 'string' &&
       url.startsWith('https://www.youtube.com/')
