@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { applyVideoStorageWrite, isVideoStorageWrite } from '@/storage'
+import { applyVideoStorageWrite, isVideoStorageWrite, videoStorageItem } from '@/storage'
 
 vi.mock('@/storage', () => ({
   applyVideoStorageWrite: vi.fn(),
@@ -43,5 +43,31 @@ describe('background', () => {
     await vi.waitFor(() =>
       expect(sendResponse).toHaveBeenCalledWith({ ok: false, error: 'Error: quota' }),
     )
+  })
+
+  it('opens the most recent video on resume-last-video', async () => {
+    const onCommand = { addListener: vi.fn() }
+    const tabs = { create: vi.fn() }
+    vi.stubGlobal('browser', {
+      action: { setBadgeTextColor: vi.fn() },
+      runtime: { onMessage: { addListener: vi.fn() }, onStartup: { addListener: vi.fn() } },
+      commands: { onCommand },
+      tabs,
+    })
+    const { default: background } = await import('@/entrypoints/background')
+    ;(background as unknown as () => void)()
+    const entry = (id: string, timestamp: number) => ({
+      id,
+      timestamp,
+      progress: 60,
+      title: id,
+      url: `https://www.youtube.com/watch?v=${id}`,
+    })
+    vi.mocked(videoStorageItem.getValue).mockResolvedValue({
+      old: entry('old', 1),
+      new: entry('new', 2),
+    })
+    await onCommand.addListener.mock.calls[0][0]('resume-last-video')
+    expect(tabs.create).toHaveBeenCalledWith({ url: 'https://www.youtube.com/watch?v=new' })
   })
 })
