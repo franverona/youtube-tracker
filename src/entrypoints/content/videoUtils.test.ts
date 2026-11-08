@@ -171,6 +171,27 @@ describe('loadProgress', () => {
     expect(video.currentTime).toBe(0)
   })
 
+  it('waits for a pre-roll ad to finish before resuming', async () => {
+    vi.mocked(videoStorage.getById).mockResolvedValue(stored)
+    const player = document.createElement('div')
+    player.id = 'movie_player'
+    player.className = 'ad-showing'
+    document.body.append(player)
+    const video = document.createElement('video')
+    let duration = 15 // the ad's
+    Object.defineProperty(video, 'readyState', { value: 4 })
+    Object.defineProperty(video, 'duration', { get: () => duration })
+    video.play = vi.fn().mockResolvedValue(undefined)
+    await loadProgress('abc123', video)
+    expect(video.currentTime).toBe(0)
+
+    player.className = ''
+    duration = 300
+    video.dispatchEvent(new Event('loadeddata'))
+    player.remove()
+    expect(video.currentTime).toBe(50)
+  })
+
   it('drops pending listeners when the signal aborts', async () => {
     vi.mocked(videoStorage.getById).mockResolvedValue(stored)
     const video = document.createElement('video')
