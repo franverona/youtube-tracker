@@ -28,7 +28,7 @@ export default defineBackground(() => {
     if (!isVideoStorageWrite(message)) return
     applyVideoStorageWrite(message).then(
       () => sendResponse(),
-      () => sendResponse(),
+      (e) => sendResponse({ ok: false, error: String(e) }),
     )
     return true
   })

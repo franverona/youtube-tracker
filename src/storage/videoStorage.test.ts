@@ -58,6 +58,11 @@ describe('videoStorage', () => {
     expect(sendMessage).toHaveBeenNthCalledWith(2, { type: 'video-storage:remove', id: sample.id })
     expect(mockData.state).toEqual({})
   })
+
+  it('rejects when the background reports a failed write', async () => {
+    sendMessage.mockResolvedValue({ ok: false, error: 'QUOTA_BYTES quota exceeded' })
+    await expect(videoStorage.save(sample.id, sample)).rejects.toThrow('QUOTA_BYTES')
+  })
 })
 
 describe('applyVideoStorageWrite', () => {
