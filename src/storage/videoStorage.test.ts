@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   applyVideoStorageWrite,
+  ignoredVideos,
+  ignoredVideosItem,
   isValidVideoState,
   videoStorage,
   type VideoDetails,
@@ -128,6 +130,15 @@ describe('applyVideoStorageWrite', () => {
     const entry = { ...sample, id: 'constructor' }
     await applyVideoStorageWrite({ type: 'video-storage:import', state: { constructor: entry } })
     expect(mockData.state).toEqual({ constructor: entry })
+  })
+})
+
+describe('ignoredVideos', () => {
+  it('adds and removes ids', async () => {
+    await ignoredVideos.add('abc123def45', 'T')
+    expect(await ignoredVideosItem.getValue()).toEqual({ abc123def45: 'T' })
+    await ignoredVideos.remove('abc123def45')
+    expect(await ignoredVideosItem.getValue()).toEqual({})
   })
 })
 
