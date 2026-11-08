@@ -15,13 +15,18 @@ export default function App() {
     () => (videos ? Object.values(videos).sort((a, b) => b.timestamp - a.timestamp) : null),
     [videos],
   )
-  const [importStatus, setImportStatus] = useState<{ ok: boolean; message: string } | null>(null)
+  const [status, setStatus] = useState<{ ok: boolean; message: string } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { message, remember, undo } = useUndo()
 
-  function removeVideo(id: string) {
-    if (videos?.[id]) remember('Video removed', { [id]: videos[id] })
-    videoStorage.remove(id)
+  async function removeVideo(id: string) {
+    const removed = videos?.[id]
+    try {
+      await videoStorage.remove(id)
+      if (removed) remember('Video removed', { [id]: removed })
+    } catch {
+      setStatus({ ok: false, message: 'Remove failed.' })
+    }
   }
 
   async function clearAll() {
@@ -30,8 +35,15 @@ export default function App() {
       `Remove all ${sortedVideos.length} tracked video${sortedVideos.length !== 1 ? 's' : ''}?`,
     )
     if (!confirmed || !videos) return
-    remember(`Removed ${sortedVideos.length} video${sortedVideos.length !== 1 ? 's' : ''}`, videos)
-    await videoStorage.clear()
+    try {
+      await videoStorage.clear()
+      remember(
+        `Removed ${sortedVideos.length} video${sortedVideos.length !== 1 ? 's' : ''}`,
+        videos,
+      )
+    } catch {
+      setStatus({ ok: false, message: 'Clear all failed.' })
+    }
   }
 
   async function exportData() {
@@ -61,14 +73,14 @@ export default function App() {
       const text = await file.text()
       const parsed: unknown = JSON.parse(text)
       if (!isValidVideoState(parsed)) {
-        setImportStatus({ ok: false, message: 'Invalid file format.' })
+        setStatus({ ok: false, message: 'Invalid file format.' })
         return
       }
       await videoStorage.import(parsed)
       const count = Object.keys(parsed).length
-      setImportStatus({ ok: true, message: `Imported ${count} video${count !== 1 ? 's' : ''}.` })
+      setStatus({ ok: true, message: `Imported ${count} video${count !== 1 ? 's' : ''}.` })
     } catch {
-      setImportStatus({ ok: false, message: 'Import failed.' })
+      setStatus({ ok: false, message: 'Import failed.' })
     }
   }
 
@@ -90,10 +102,10 @@ export default function App() {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Tracked Videos</h1>
         <div className="flex items-center gap-2">
-          {importStatus && (
+          {status && (
             <span
-              className={`text-sm ${importStatus.ok ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-              {importStatus.message}
+              className={`text-sm ${status.ok ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+              {status.message}
             </span>
           )}
           <input

@@ -30,9 +30,15 @@ export default function App() {
   )
   const { message, remember, undo } = useUndo()
 
-  function removeVideo(id: string) {
-    if (videos?.[id]) remember('Video removed', { [id]: videos[id] })
-    videoStorage.remove(id)
+  async function removeVideo(id: string) {
+    const removed = videos?.[id]
+    try {
+      await videoStorage.remove(id)
+      if (removed) remember('Video removed', { [id]: removed })
+    } catch (e) {
+      // The row stays in the list, which is the visible feedback here.
+      console.warn('removeVideo: failed to remove video:', e)
+    }
   }
 
   const undoToast = message && (
