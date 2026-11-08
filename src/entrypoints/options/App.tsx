@@ -1,5 +1,11 @@
 import { useRef, useMemo, useState } from 'react'
-import { ignoredVideos, isValidVideoState, videoStorage, videoStorageItem } from '@/storage'
+import {
+  ignoredVideos,
+  importWins,
+  isValidVideoState,
+  videoStorage,
+  videoStorageItem,
+} from '@/storage'
 import { formatTime, timeAgo } from '../../utils'
 import { useIgnoredVideos, useUndo, useVideoStorage } from '@/hooks'
 
@@ -7,6 +13,7 @@ function getThumbnail(id: string) {
   return `https://i.ytimg.com/vi/${id}/mqdefault.jpg`
 }
 
+// Progress-bar scale for entries without `duration` (older saves, imports).
 const FALLBACK_VIDEO_DURATION = 4 * 60 * 60
 
 export default function App() {
@@ -94,9 +101,18 @@ export default function App() {
         setStatus({ ok: false, message: 'Invalid file format.' })
         return
       }
+      // Import merges, keeping the newer entry per video, so report what applies.
+      const current = await videoStorageItem.getValue()
+      const entries = Object.entries(parsed)
+      const applied = entries.filter(([id, entry]) => importWins(current, id, entry)).length
+      const skipped = entries.length - applied
       await videoStorage.import(parsed)
-      const count = Object.keys(parsed).length
-      setStatus({ ok: true, message: `Imported ${count} video${count !== 1 ? 's' : ''}.` })
+      setStatus({
+        ok: true,
+        message:
+          `Imported ${applied} video${applied !== 1 ? 's' : ''}` +
+          (skipped ? `; skipped ${skipped} you already have newer progress for.` : '.'),
+      })
     } catch {
       setStatus({ ok: false, message: 'Import failed.' })
     }

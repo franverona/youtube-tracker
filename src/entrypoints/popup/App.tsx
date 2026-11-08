@@ -7,6 +7,7 @@ function getThumbnail(id: string) {
   return `https://i.ytimg.com/vi/${id}/mqdefault.jpg`
 }
 
+// Progress-bar scale for entries without `duration` (older saves, imports).
 const FALLBACK_VIDEO_DURATION = 4 * 60 * 60
 
 // The popup is the quick-glance view; the options page lists everything.

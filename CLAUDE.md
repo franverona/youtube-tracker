@@ -42,11 +42,13 @@ pnpm run format:check      # Check Prettier formatting (run in CI)
 ```
 src/
   entrypoints/
-    background.ts          # Toolbar badge/title (video count, paused state) + toggle-tracking command
+    background.ts          # Toolbar badge/title, storage-write queue, toggle-tracking + resume-last-video commands
     content.ts              # Content script entry point (defineContentScript)
     content/
       videoUtils.ts         # saveProgress / loadProgress
       videoUtils.test.ts
+      resumeNotice.ts       # In-player "Resumed at … · Start over" notice
+      resumeNotice.test.ts
       youtubeUtils.ts       # getVideoId / getVideoElement / getVideoTitle
       youtubeUtils.test.ts
     popup/
@@ -63,9 +65,10 @@ src/
     useVideoStorage.ts     # React hook for live storage updates (used by popup + options)
     useUndo.ts             # Undo for removals (used by popup + options)
     useUndo.test.tsx
+    useIgnoredVideos.ts    # React hook for the don't-track list (options page)
     index.ts
   storage/
-    videoStorage.ts         # videoStorageItem, trackingEnabledItem (WXT storage) + videoStorage helpers
+    videoStorage.ts         # videoStorageItem, trackingEnabledItem, ignoredVideosItem (WXT storage) + helpers
     videoStorage.test.ts
     index.ts                # Barrel re-exported as `@/storage`
   utils.ts                  # formatTime / timeAgo
@@ -79,7 +82,7 @@ public/
   icon-16.png
   icon-48.png
   icon-128.png
-wxt.config.ts               # WXT config: srcDir, React module, Tailwind, manifest (incl. toggle-tracking command)
+wxt.config.ts               # WXT config: srcDir, React module, Tailwind, manifest (incl. keyboard commands)
 tsconfig.json               # Extends .wxt/tsconfig.json after wxt prepare
 ```
 
@@ -88,47 +91,55 @@ Build outputs go to `.output/chrome-mv3/` and `.output/firefox-mv2/`.
 ### Video Tracking Flow
 
 1. **Content Script Initialization** (`src/entrypoints/content.ts`):
-   - Defined via `defineContentScript` with `matches: ['https://*.youtube.com/*']` (YouTube reaches most videos via in-page navigation, so the script must already be present; it bails outside `/watch`)
-   - Listens for YouTube SPA navigation events (`yt-navigate-finish`, `popstate`)
+   - Defined via `defineContentScript` with `matches: ['https://*.youtube.com/*']` (YouTube reaches most videos via in-page navigation, so the script must already be present; it bails outside `/watch`) and `excludeMatches: ['https://music.youtube.com/*']` (Music also uses `/watch?v=`)
+   - Re-initializes on YouTube SPA navigation (`yt-navigate-finish`, `popstate`), and on a capture-phase `play` from a new main `<video>` — YouTube can replace the element without navigating; for the same video it only re-attaches listeners and doesn't resume again
+   - Saves on `yt-navigate-start`, while the URL still names the current video, so leaving `/watch` (e.g. into the miniplayer, which isn't tracked) keeps the real position
    - Implements retry logic to handle race conditions with YouTube's dynamic page loading
 
 2. **Progress Tracking**:
-   - Extracts video ID from URL and locates video element in DOM
-   - Loads saved progress from storage via `videoStorage.getById()`
-   - Sets video `currentTime` to resume from last position
+   - Extracts video ID from URL (`getVideoId()` returns `null` unless `v` is an 11-character id) and locates the main video element
+   - Loads saved progress via `videoStorage.getById()` and seeks to it minus `RESUME_REWIND` (3s), calling `play()` if the player was paused; then shows the in-player resume notice, whose "Start over" seeks to 0 and removes the entry
+   - Resume is skipped when the save is within 5s of the end, when the element is already past `MIN_SAVED_PROGRESS` (e.g. the miniplayer expanding back), and waits while a pre-roll ad is showing (ads play in the same `<video>`)
    - Saves progress periodically (5s for short videos, 30s for long videos) when playing
    - Nothing is saved before 15s of progress (`MIN_SAVED_PROGRESS`), so previews and misclicks don't create entries
    - In the last 5% of a video (capped at 60s) a save removes the entry instead, treating it as finished like `ended`
    - Saves immediately on pause; `ended` removes the entry (there is no `beforeunload`/`pagehide` save — the periodic save covers tab close)
    - Skips resume when the URL has `t=`/`start=`; skips load/save for live streams (non-finite `duration`)
+   - `canWrite()` blocks every save/remove while tracking is paused, the video is on the don't-track list, an ad is showing (`#movie_player.ad-showing`), the URL already names another video, or the extension context is gone
 
 3. **Storage Layer** (`src/storage/videoStorage.ts`, exported via `@/storage`):
    - Uses `wxt/utils/storage` — `storage.defineItem<VideoStateType>('local:video-storage')`
    - `videoStorageItem` is the raw WXT storage item (used for `.watch()` in the shared hook)
    - `videoStorage` is a convenience wrapper with `getById`, `save`, `remove`, `clear`, `import` — writes are sent via `runtime.sendMessage` to the background, which applies them through a single queue (`applyVideoStorageWrite`) so tabs, popup and options can't clobber each other
+   - The background validates every write where it's applied (content scripts sit next to a page we don't control) and replies `{ ok: false, error }` when it's invalid or fails (e.g. quota); `videoStorage` writes then reject, so callers must handle errors
+   - `import` merges rather than replaces: per id the entry with the newer `timestamp` wins (`importWins`), and nothing is deleted
    - `trackingEnabledItem` (`local:tracking-enabled`, boolean, default `true`) is the global on/off switch checked by the content script before loading/saving progress
+   - `ignoredVideosItem` (`local:ignored-videos`, id → title) is the per-video don't-track list, changed through `ignoredVideos.add/remove`
    - Each video entry contains: `id`, `progress` (currentTime in seconds), `duration?`, `timestamp`, `title`, `url`
-   - `isValidVideoState()` validates untrusted data (used by the options page's JSON import)
+   - `isValidVideoState()` validates untrusted data (import file, background writes): 11-character id matching its key, finite non-negative numbers, timestamp at most a day in the future, `https://www.youtube.com/` url
 
 4. **Popup UI** (`src/entrypoints/popup/`):
-   - React 19 component displaying tracked videos sorted by timestamp, plus a tracking on/off toggle and a settings button (opens the options page)
+   - React 19 component showing the 10 most recent tracked videos (`POPUP_VIDEO_LIMIT`, then a "View all" link to the options page), a tracking on/off toggle and a settings button
+   - Each row has Remove (undoable) and "Don't track this video" (adds it to the ignore list and removes the entry)
    - `useVideoStorage` hook (`src/hooks/`) subscribes to live storage changes via `videoStorageItem.watch()`
    - Styled with Tailwind CSS v4; dark mode is automatic via the `dark:` variant (`prefers-color-scheme`) — no manual toggle or stored theme setting
 
 5. **Options Page** (`src/entrypoints/options/`):
-   - Full-page video list (same data as the popup) with export/import (JSON) and clear-all controls
-   - Reuses `useVideoStorage` and `isValidVideoState`
+   - Full-page video list with export/import (JSON) and clear-all controls; the import message counts only the entries the merge applied
+   - "Not tracked" list of ignored videos with "Track again"
+   - Reuses `useVideoStorage`, `useIgnoredVideos` and `isValidVideoState`
    - Same automatic dark mode as the popup
 
 6. **Background** (`src/entrypoints/background.ts`):
    - Sets the toolbar badge to the tracked-video count, or a gray "paused" indicator when `trackingEnabledItem` is `false`
-   - Handles all video-storage writes sent by other contexts (`isVideoStorageWrite` / `applyVideoStorageWrite`)
+   - Handles all video-storage writes sent by this extension's contexts (checks `sender.id`; `isVideoStorageWrite` / `applyVideoStorageWrite`)
    - Uses `browser.action ?? browser.browserAction` (Firefox MV2 only has `browserAction`)
-   - Registers the `toggle-tracking` command (default shortcut `Alt+Shift+Y`, declared in `wxt.config.ts`) to flip `trackingEnabledItem` without opening the popup
+   - Registers an empty `runtime.onStartup` listener: without it Chrome doesn't wake the MV3 worker at launch, and the badge (which Chrome doesn't persist) stays blank
+   - Commands (declared in `wxt.config.ts`): `toggle-tracking` (`Alt+Shift+Y`) flips `trackingEnabledItem`; `resume-last-video` (`Alt+Shift+L`) opens the newest entry's URL in a new tab, where the content script resumes it
 
 ### Build System
 
-- **WXT** orchestrates the entire build — no Turborepo, single package (`pnpm-workspace.yaml` exists only for `overrides` and `allowBuilds`)
+- **WXT** orchestrates the entire build — no Turborepo, single package (`pnpm-workspace.yaml` exists only for pnpm settings: `engineStrict`, `overrides`, `allowBuilds` — pnpm 11 ignores non-auth settings in `.npmrc`)
 - **Vite** (via WXT) handles bundling
 - **Tailwind CSS v4** configured via `@tailwindcss/vite` plugin in `wxt.config.ts`
 - **TypeScript** with strict mode; `.wxt/tsconfig.json` is auto-generated by `wxt prepare`
@@ -137,11 +148,11 @@ Build outputs go to `.output/chrome-mv3/` and `.output/firefox-mv2/`.
 
 ### Code Quality
 
-- **ESLint** (`eslint.config.mjs`) — flat config with `typescript-eslint`, `eslint-plugin-react`, `eslint-plugin-react-hooks`, and `eslint-config-prettier`
+- **ESLint** (`eslint.config.mjs`) — flat config with `typescript-eslint`, `eslint-plugin-react`, `eslint-plugin-react-hooks`, and `eslint-config-prettier`; `pnpm run lint` uses `--max-warnings=0`, so warnings fail CI
 - **Prettier** (`.prettierrc`, with `prettier-plugin-tailwindcss`) — `pnpm run format` / `format:check`; CI runs the check
 - **lint-staged** — before each commit runs Prettier + ESLint on staged `src/**/*.{ts,tsx}` and Prettier on `src/**/*.{css,html}`
 - **husky** — git hooks: `pre-commit` runs lint-staged, `commit-msg` runs commitlint
-- **commitlint** (`commitlint.config.js`) — enforces Conventional Commits format: `type(scope): description`
+- **commitlint** (`commitlint.config.js`) — enforces Conventional Commits format: `type(scope): description`, locally on commits and in CI on PR titles (squash merges use the title as the commit on `main`)
   - Valid types: `feat`, `fix`, `chore`, `docs`, `style`, `refactor`, `test`, `ci`, etc.
 
 ### Testing
@@ -156,17 +167,18 @@ Build outputs go to `.output/chrome-mv3/` and `.output/firefox-mv2/`.
 
 ### CI
 
-GitHub Actions runs on every push to `main` and on all pull requests (`.github/workflows/ci.yml`):
-1. `pnpm run test`
-2. `pnpm run type-check`
-3. `pnpm run lint`
-4. `pnpm run format:check`
-5. `pnpm run zip` (Chrome build + zip)
-6. `pnpm run zip:firefox` (Firefox build + zip, plus the sources zip)
+GitHub Actions runs on pushes to `main` (except docs-only changes: `**/*.md`, `LICENSE`, `.gitignore`) and on all pull requests, including title edits (`.github/workflows/ci.yml`):
+1. PR title lint (commitlint), on pull requests only
+2. `pnpm run test`
+3. `pnpm run type-check`
+4. `pnpm run lint`
+5. `pnpm run format:check`
+6. `pnpm run zip` (Chrome build + zip)
+7. `pnpm run zip:firefox` (Firefox build + zip, plus the sources zip)
 
-The job ("Type check & build") is a required status check on `main` via a repository ruleset, so PRs — including Dependabot auto-merges — can't merge until it passes.
+The job ("Type check & build") is a required status check on `main` via a repository ruleset, which also requires a PR for every change (admins can bypass only through a PR), so PRs — including Dependabot auto-merges — can't merge until it passes.
 
-Pushing a `v*` tag runs `.github/workflows/release.yml`: it checks the tag matches `package.json`'s `version` and that the commit is on `main`, runs `test` + `type-check`, then `zip` + `zip:firefox`, and publishes a GitHub release with the zips.
+Pushing a `v*` tag runs `.github/workflows/release.yml`: it checks the tag matches `package.json`'s `version` and that the commit is on `main`, runs `test` + `type-check`, then `zip` + `zip:firefox`, and publishes a GitHub release with the zips (re-runnable: an existing release gets its assets replaced).
 
 ## Development Notes
 
@@ -181,11 +193,12 @@ Pushing a `v*` tag runs `.github/workflows/release.yml`: it checks the tag match
 - Use `videoStorage` for read/write operations (`getById`, `save`, `remove`, `clear`, `import`)
 - Never write with `videoStorageItem.setValue()` directly: `videoStorage` writes go through the background queue, and a direct write from another context can overwrite or be overwritten by concurrent saves
 - Use `videoStorageItem` directly when you need to subscribe to changes (`.watch()`), or `trackingEnabledItem` for the global on/off flag
+- `ignoredVideosItem` is written directly (via `ignoredVideos`), not through the queue — fine while only popup/options clicks change it
 - Storage operations are async and return Promises
 
 ### Popup vs Options
-- Popup (`src/entrypoints/popup/`) is the quick-glance view: recent videos, tracking toggle, link to options
-- Options page (`src/entrypoints/options/`) is the full management view: all videos, export/import, clear all
+- Popup (`src/entrypoints/popup/`) is the quick-glance view: the 10 most recent videos, tracking toggle, link to options
+- Options page (`src/entrypoints/options/`) is the full management view: all videos, export/import, clear all, the don't-track list
 - Both share `useVideoStorage` and `useUndo` from `src/hooks/`; `useUndo` keeps the last removal (single delete or Clear all) in memory for 5s and restores it via `videoStorage.import`
 
 ### Multi-Browser Support

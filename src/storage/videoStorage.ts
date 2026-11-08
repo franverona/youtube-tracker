@@ -84,6 +84,12 @@ function isValidWrite(write: VideoStorageWrite): boolean {
   }
 }
 
+/** Whether an imported entry replaces what's stored: it's new, or newer. */
+export function importWins(current: VideoStateType, id: string, entry: VideoDetails): boolean {
+  // hasOwn: ids like `constructor` would otherwise hit Object.prototype.
+  return !Object.hasOwn(current, id) || entry.timestamp > current[id].timestamp
+}
+
 /** Applies a write in the background context. Other contexts go through `videoStorage`. */
 export function applyVideoStorageWrite(write: VideoStorageWrite): Promise<void> {
   if (!isValidWrite(write)) return Promise.reject(new Error(`Invalid storage write: ${write.type}`))
@@ -104,8 +110,7 @@ export function applyVideoStorageWrite(write: VideoStorageWrite): Promise<void> 
       return enqueueWrite((current) => {
         const next = { ...current }
         for (const [id, entry] of Object.entries(write.state)) {
-          // hasOwn: ids like `constructor` would otherwise hit Object.prototype.
-          if (!Object.hasOwn(next, id) || entry.timestamp > next[id].timestamp) next[id] = entry
+          if (importWins(next, id, entry)) next[id] = entry
         }
         return next
       })

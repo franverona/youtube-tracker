@@ -170,6 +170,8 @@ export default defineContentScript({
         },
         { signal },
       )
+      // `duration` can still be NaN at `play`, which picks the short-video
+      // interval; re-arm once it's known.
       currentVideoElement.addEventListener(
         'loadedmetadata',
         () => {

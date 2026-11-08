@@ -30,6 +30,8 @@ export default defineBackground(() => {
       () => sendResponse(),
       (e) => sendResponse({ ok: false, error: String(e) }),
     )
+    // Keeps the channel open for the async sendResponse; without it every write's
+    // sendMessage resolves before the write is applied (or fails).
     return true
   })
 
