@@ -46,6 +46,8 @@ jobs:
 
       - run: pnpm run format:check
 
-      - run: pnpm run build
+      # zip builds first, so this also covers what release.yml ships
+      # (including the Firefox sources zip).
+      - run: pnpm run zip
 
-      - run: pnpm run build:firefox
+      - run: pnpm run zip:firefox

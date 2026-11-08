@@ -161,12 +161,12 @@ GitHub Actions runs on every push to `main` and on all pull requests (`.github/w
 2. `pnpm run type-check`
 3. `pnpm run lint`
 4. `pnpm run format:check`
-5. `pnpm run build` (Chrome)
-6. `pnpm run build:firefox` (Firefox)
+5. `pnpm run zip` (Chrome build + zip)
+6. `pnpm run zip:firefox` (Firefox build + zip, plus the sources zip)
 
 The job ("Type check & build") is a required status check on `main` via a repository ruleset, so PRs — including Dependabot auto-merges — can't merge until it passes.
 
-Pushing a `v*` tag runs `.github/workflows/release.yml`: it checks the tag matches `package.json`'s `version`, runs `zip` + `zip:firefox`, and publishes a GitHub release with the zips.
+Pushing a `v*` tag runs `.github/workflows/release.yml`: it checks the tag matches `package.json`'s `version` and that the commit is on `main`, runs `test` + `type-check`, then `zip` + `zip:firefox`, and publishes a GitHub release with the zips.
 
 ## Development Notes
 
