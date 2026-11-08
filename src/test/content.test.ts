@@ -107,6 +107,26 @@ describe('content script', () => {
     expect(videoStorage.save).not.toHaveBeenCalled()
   })
 
+  it('shows a resume notice whose Start over rewinds and forgets the entry', async () => {
+    vi.mocked(videoStorage.getById).mockResolvedValue({
+      id: A,
+      progress: 100,
+      timestamp: 1,
+      title: 'T',
+      url: 'u',
+    })
+    const video = await start()
+    video.currentTime = 0
+    Object.defineProperty(video, 'readyState', { value: 4 })
+    video.play = vi.fn().mockResolvedValue(undefined)
+    video.dispatchEvent(new Event('loadeddata'))
+    const notice = document.getElementById('yt-tracker-resume-notice')
+    expect(notice?.textContent).toContain('Resumed at 1:37')
+    notice?.querySelector('button')?.click()
+    expect(video.currentTime).toBe(0)
+    expect(videoStorage.remove).toHaveBeenCalledWith(A)
+  })
+
   it("doesn't resume or save a video on the don't-track list", async () => {
     vi.mocked(ignoredVideosItem.getValue).mockResolvedValue({ [A]: 'T' })
     const video = await start()

@@ -1,4 +1,5 @@
 import { ignoredVideosItem, trackingEnabledItem, videoStorage } from '@/storage'
+import { showResumeNotice } from './content/resumeNotice'
 import { loadProgress, saveProgress } from './content/videoUtils'
 import { getVideoElement, getVideoId } from './content/youtubeUtils'
 
@@ -113,7 +114,20 @@ export default defineContentScript({
 
       if (isTrackingEnabled && !isSameVideo && !isIgnored(currentVideoId)) {
         try {
-          await loadProgress(currentVideoId, currentVideoElement, signal)
+          const id = currentVideoId
+          const element = currentVideoElement
+          await loadProgress(id, element, signal, (time) =>
+            showResumeNotice(
+              time,
+              () => {
+                element.currentTime = 0
+                if (canWrite()) {
+                  videoStorage.remove(id).catch((e) => console.warn('startOver: failed:', e))
+                }
+              },
+              signal,
+            ),
+          )
         } catch (e) {
           // Still attach the save listeners below.
           console.warn('initializeVideoTracking: failed to load progress:', e)

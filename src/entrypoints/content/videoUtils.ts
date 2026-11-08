@@ -29,6 +29,8 @@ export async function loadProgress(
   videoId: string,
   videoElement: HTMLVideoElement,
   signal?: AbortSignal,
+  /** Called with the position it seeked to. */
+  onResume?: (time: number) => void,
 ) {
   if (!videoId || !videoElement) {
     console.warn('loadProgress: Missing video ID or video element.')
@@ -67,7 +69,9 @@ export async function loadProgress(
     // Within 5s of the end: let it start over instead of landing on the end screen.
     if (videoElement.duration - progress < 5) return
 
-    videoElement.currentTime = Math.max(0, progress - RESUME_REWIND)
+    const resumeAt = Math.max(0, progress - RESUME_REWIND)
+    videoElement.currentTime = resumeAt
+    onResume?.(resumeAt)
 
     // Only force playback when there's a real position to resume; a near-zero
     // entry shouldn't override the user's autoplay-off choice.

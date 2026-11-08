@@ -117,6 +117,19 @@ describe('loadProgress', () => {
     expect(video.currentTime).toBe(50 - RESUME_REWIND)
   })
 
+  it('reports the position it resumed to', async () => {
+    vi.mocked(videoStorage.getById).mockResolvedValue({
+      id: 'abc123',
+      progress: 50,
+      timestamp: 1000,
+      title: 'T',
+      url: 'u',
+    })
+    const onResume = vi.fn()
+    await loadProgress('abc123', createMockVideo(), undefined, onResume)
+    expect(onResume).toHaveBeenCalledWith(50 - RESUME_REWIND)
+  })
+
   it('skips setting currentTime when within 5s of the end', async () => {
     const stored: VideoDetails = {
       id: 'abc123',
