@@ -7,6 +7,8 @@ export default defineContentScript({
   // most videos via in-page navigation, so match every page and let
   // initializeVideoTracking() bail outside /watch.
   matches: ['https://*.youtube.com/*'],
+  // Music also uses /watch?v=, but songs aren't videos to resume.
+  excludeMatches: ['https://music.youtube.com/*'],
   async main() {
     // Awaited so a hard-loaded watch page doesn't resume while tracking is paused.
     let isTrackingEnabled = await trackingEnabledItem.getValue()
