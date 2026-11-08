@@ -48,6 +48,9 @@ export async function loadProgress(
     if (signal?.aborted || getVideoId() !== videoId) return
     // HAVE_CURRENT_DATA: seeking before this is unreliable.
     if (videoElement.readyState < 2) return
+    // A pre-roll ad plays in this same element; wait for the video's own
+    // loadeddata/loadedmetadata instead of judging the ad's duration.
+    if (document.querySelector('#movie_player.ad-showing')) return
 
     videoElement.removeEventListener('loadeddata', trySetProgress)
     videoElement.removeEventListener('canplaythrough', trySetProgress)
