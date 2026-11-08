@@ -73,7 +73,10 @@ export function applyVideoStorageWrite(write: VideoStorageWrite): Promise<void> 
 }
 
 async function send(write: VideoStorageWrite): Promise<void> {
-  await browser.runtime.sendMessage(write)
+  // The background replies `{ ok: false }` when the write failed (e.g. quota).
+  const response = (await browser.runtime.sendMessage(write)) as
+    { ok: false; error: string } | undefined
+  if (response?.ok === false) throw new Error(response.error)
 }
 
 export const videoStorage = {

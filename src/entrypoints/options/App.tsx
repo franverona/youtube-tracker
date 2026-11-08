@@ -68,7 +68,7 @@ export default function App() {
       const count = Object.keys(parsed).length
       setImportStatus({ ok: true, message: `Imported ${count} video${count !== 1 ? 's' : ''}.` })
     } catch {
-      setImportStatus({ ok: false, message: 'Failed to read file.' })
+      setImportStatus({ ok: false, message: 'Import failed.' })
     }
   }
 
