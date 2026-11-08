@@ -9,6 +9,13 @@ function getThumbnail(id: string) {
 
 const FALLBACK_VIDEO_DURATION = 4 * 60 * 60
 
+// The popup is the quick-glance view; the options page lists everything.
+const POPUP_VIDEO_LIMIT = 10
+
+function openOptions() {
+  browser.tabs.create({ url: browser.runtime.getURL('/options.html') })
+}
+
 export default function App() {
   const [trackingEnabled, setTrackingEnabled] = useState(true)
 
@@ -67,7 +74,7 @@ export default function App() {
         {trackingEnabled ? 'Tracking' : 'Paused'}
       </button>
       <button
-        onClick={() => browser.tabs.create({ url: browser.runtime.getURL('/options.html') })}
+        onClick={openOptions}
         className="rounded p-1 text-gray-400 transition-colors hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
         title="Settings">
         <svg
@@ -122,75 +129,84 @@ export default function App() {
       </div>
 
       <div className="flex flex-col gap-3">
-        {sortedVideos.map(({ id, progress, duration, timestamp, title, url }) => {
-          const progressPercent = Math.min(
-            (progress / (duration ?? FALLBACK_VIDEO_DURATION)) * 100,
-            100,
-          )
-          return (
-            <div
-              key={id}
-              className="group flex gap-3 rounded-lg p-2 transition-colors hover:bg-gray-50 dark:hover:bg-gray-900">
-              {/* Thumbnail */}
-              <a href={url} target="_blank" rel="noreferrer" className="relative w-32 shrink-0">
-                <img
-                  src={getThumbnail(id)}
-                  alt={title}
-                  className="rounded border border-gray-200 object-cover dark:border-gray-700"
-                />
-                <span className="absolute right-1 bottom-1 rounded bg-black/80 px-1 py-0.5 text-[10px] font-medium text-white">
-                  {formatTime(progress)}
-                </span>
-              </a>
-
-              {/* Info */}
-              <div className="flex min-w-0 flex-1 flex-col justify-between">
-                <div>
-                  <a
-                    href={url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mb-1 line-clamp-2 text-sm leading-snug font-medium text-gray-900 hover:text-blue-600 dark:text-gray-100 dark:hover:text-blue-400">
-                    {title}
-                  </a>
-                </div>
-
-                {/* Progress bar */}
-                <div className="mb-1.5 h-1 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
-                  <div
-                    className="h-full rounded-full bg-red-500 transition-all"
-                    style={{ width: `${progressPercent}%` }}
+        {sortedVideos
+          .slice(0, POPUP_VIDEO_LIMIT)
+          .map(({ id, progress, duration, timestamp, title, url }) => {
+            const progressPercent = Math.min(
+              (progress / (duration ?? FALLBACK_VIDEO_DURATION)) * 100,
+              100,
+            )
+            return (
+              <div
+                key={id}
+                className="group flex gap-3 rounded-lg p-2 transition-colors hover:bg-gray-50 dark:hover:bg-gray-900">
+                {/* Thumbnail */}
+                <a href={url} target="_blank" rel="noreferrer" className="relative w-32 shrink-0">
+                  <img
+                    src={getThumbnail(id)}
+                    alt={title}
+                    className="rounded border border-gray-200 object-cover dark:border-gray-700"
                   />
-                </div>
-
-                {/* Footer */}
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-400 dark:text-gray-500">
-                    {timeAgo(timestamp)}
+                  <span className="absolute right-1 bottom-1 rounded bg-black/80 px-1 py-0.5 text-[10px] font-medium text-white">
+                    {formatTime(progress)}
                   </span>
-                  <button
-                    onClick={() => removeVideo(id)}
-                    className="rounded p-0.5 text-gray-400 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400"
-                    title="Remove">
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2">
-                      <polyline points="3 6 5 6 21 6" />
-                      <path d="M19 6l-1 14H6L5 6" />
-                      <path d="M10 11v6M14 11v6" />
-                      <path d="M9 6V4h6v2" />
-                    </svg>
-                  </button>
+                </a>
+
+                {/* Info */}
+                <div className="flex min-w-0 flex-1 flex-col justify-between">
+                  <div>
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mb-1 line-clamp-2 text-sm leading-snug font-medium text-gray-900 hover:text-blue-600 dark:text-gray-100 dark:hover:text-blue-400">
+                      {title}
+                    </a>
+                  </div>
+
+                  {/* Progress bar */}
+                  <div className="mb-1.5 h-1 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+                    <div
+                      className="h-full rounded-full bg-red-500 transition-all"
+                      style={{ width: `${progressPercent}%` }}
+                    />
+                  </div>
+
+                  {/* Footer */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-400 dark:text-gray-500">
+                      {timeAgo(timestamp)}
+                    </span>
+                    <button
+                      onClick={() => removeVideo(id)}
+                      className="rounded p-0.5 text-gray-400 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400"
+                      title="Remove">
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2">
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6l-1 14H6L5 6" />
+                        <path d="M10 11v6M14 11v6" />
+                        <path d="M9 6V4h6v2" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          )
-        })}
+            )
+          })}
       </div>
+      {sortedVideos.length > POPUP_VIDEO_LIMIT && (
+        <button
+          onClick={openOptions}
+          className="mt-3 w-full rounded-md py-1.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-900 dark:hover:text-gray-300">
+          View all ({sortedVideos.length})
+        </button>
+      )}
       {undoToast}
     </div>
   )
