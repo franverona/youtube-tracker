@@ -176,6 +176,12 @@ export default defineContentScript({
       true,
     )
 
+    // Fires while the URL still names the current video, so leaving /watch
+    // (e.g. into the miniplayer, which isn't tracked) keeps the real position.
+    document.addEventListener('yt-navigate-start', () => {
+      saveCurrent()
+    })
+
     document.addEventListener('yt-navigate-finish', () => {
       initializationAttempts = 0
       setTimeout(attemptInitializationWithRetry, INITIALIZATION_RETRY_DELAY)
