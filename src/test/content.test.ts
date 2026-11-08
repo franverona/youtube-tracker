@@ -72,6 +72,18 @@ describe('content script', () => {
     expect(videoStorage.save).toHaveBeenCalledWith(A, expect.objectContaining({ progress: 120 }))
   })
 
+  it("doesn't re-run resume when the element is replaced for the same video", async () => {
+    const old = await start()
+    expect(videoStorage.getById).toHaveBeenCalledTimes(1)
+    old.remove()
+    const video = document.createElement('video')
+    video.className = 'html5-main-video'
+    document.body.append(video)
+    video.dispatchEvent(new Event('play'))
+    await flush()
+    expect(videoStorage.getById).toHaveBeenCalledTimes(1)
+  })
+
   it("doesn't save or remove while an ad is playing", async () => {
     const video = await start()
     const player = document.createElement('div')

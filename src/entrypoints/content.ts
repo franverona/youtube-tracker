@@ -94,13 +94,15 @@ export default defineContentScript({
 
       teardown()
 
+      // Same video in a replaced <video>: just re-attach, resume already ran.
+      const isSameVideo = newVideoId === currentVideoId
       currentVideoId = newVideoId
       currentVideoElement = newVideoElement
       initializationAttempts = 0
       videoListenerController = new AbortController()
       const { signal } = videoListenerController
 
-      if (isTrackingEnabled) {
+      if (isTrackingEnabled && !isSameVideo) {
         await loadProgress(currentVideoId, currentVideoElement, signal)
       }
 
