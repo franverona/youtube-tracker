@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { videoStorage, type VideoDetails } from '@/storage'
-import { loadProgress, saveProgress } from './videoUtils'
+import { loadProgress, RESUME_REWIND, saveProgress } from './videoUtils'
 import { getVideoId } from './youtubeUtils'
 
 vi.mock('@/storage', () => ({
@@ -114,7 +114,7 @@ describe('loadProgress', () => {
     vi.mocked(videoStorage.getById).mockResolvedValue(stored)
     const video = createMockVideo({ readyState: 4, duration: 300 })
     await loadProgress('abc123', video)
-    expect(video.currentTime).toBe(50)
+    expect(video.currentTime).toBe(50 - RESUME_REWIND)
   })
 
   it('skips setting currentTime when within 5s of the end', async () => {
@@ -196,7 +196,7 @@ describe('loadProgress', () => {
     duration = 300
     video.dispatchEvent(new Event('loadeddata'))
     player.remove()
-    expect(video.currentTime).toBe(50)
+    expect(video.currentTime).toBe(50 - RESUME_REWIND)
   })
 
   it('drops pending listeners when the signal aborts', async () => {
