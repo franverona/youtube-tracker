@@ -46,8 +46,26 @@ function enqueueWrite(mutate: (current: VideoStateType) => VideoStateType): Prom
   return result
 }
 
+// Validated where the write is applied: content scripts run next to a page we
+// don't control, so their messages aren't trusted just for coming from us.
+function isValidWrite(write: VideoStorageWrite): boolean {
+  switch (write.type) {
+    case 'video-storage:save':
+      return isValidVideoState({ [write.id]: write.details })
+    case 'video-storage:remove':
+      return typeof write.id === 'string'
+    case 'video-storage:clear':
+      return true
+    case 'video-storage:import':
+      return isValidVideoState(write.state)
+    default:
+      return false
+  }
+}
+
 /** Applies a write in the background context. Other contexts go through `videoStorage`. */
 export function applyVideoStorageWrite(write: VideoStorageWrite): Promise<void> {
+  if (!isValidWrite(write)) return Promise.reject(new Error(`Invalid storage write: ${write.type}`))
   switch (write.type) {
     case 'video-storage:save':
       return enqueueWrite((current) => ({ ...current, [write.id]: write.details }))

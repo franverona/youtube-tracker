@@ -106,6 +106,24 @@ describe('applyVideoStorageWrite', () => {
     expect(mockData.state).toEqual({ [sample.id]: newer, [other.id]: other })
   })
 
+  it('rejects malformed writes without touching storage', async () => {
+    mockData.state = { [sample.id]: sample }
+    const bad = [
+      {
+        type: 'video-storage:save',
+        id: other.id,
+        details: { ...other, url: 'https://evil.example' },
+      },
+      { type: 'video-storage:import', state: { x: { id: 'x' } } },
+      { type: 'video-storage:remove', id: 42 },
+      { type: 'video-storage:foo' },
+    ]
+    for (const write of bad) {
+      await expect(applyVideoStorageWrite(write as never)).rejects.toThrow('Invalid storage write')
+    }
+    expect(mockData.state).toEqual({ [sample.id]: sample })
+  })
+
   it('import keeps an entry whose id is an Object.prototype name', async () => {
     const entry = { ...sample, id: 'constructor' }
     await applyVideoStorageWrite({ type: 'video-storage:import', state: { constructor: entry } })
