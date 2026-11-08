@@ -10,6 +10,8 @@ on:
   # No paths-ignore: "Type check & build" is a required check, so it must
   # report on every PR or docs-only PRs could never merge.
   pull_request:
+    # `edited` so fixing a PR title re-runs the title check.
+    types: [opened, synchronize, reopened, edited]
   workflow_dispatch:
 
 permissions:
@@ -37,6 +39,14 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
+
+      # Squash merges use the PR title as the commit on main, which the local
+      # commit-msg hook never sees.
+      - name: Lint PR title
+        if: github.event_name == 'pull_request'
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: printf '%s\n' "$TITLE" | pnpm exec commitlint
 
       - run: pnpm run test
 
