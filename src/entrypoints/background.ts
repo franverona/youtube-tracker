@@ -24,8 +24,8 @@ export default defineBackground(() => {
   }
   action.setBadgeTextColor({ color: '#fff' })
 
-  browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-    if (!isVideoStorageWrite(message)) return
+  browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (sender.id !== browser.runtime.id || !isVideoStorageWrite(message)) return
     applyVideoStorageWrite(message).then(
       () => sendResponse(),
       (e) => sendResponse({ ok: false, error: String(e) }),
