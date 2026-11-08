@@ -7,8 +7,13 @@ describe('getVideoId', () => {
   })
 
   it('returns the video id from the v query param', () => {
-    vi.stubGlobal('location', { search: '?v=abc123' })
-    expect(getVideoId()).toBe('abc123')
+    vi.stubGlobal('location', { search: '?v=abc123def45' })
+    expect(getVideoId()).toBe('abc123def45')
+  })
+
+  it('returns null for a malformed v param', () => {
+    vi.stubGlobal('location', { search: '?v=__proto__' })
+    expect(getVideoId()).toBeNull()
   })
 
   it('returns null when the v param is missing', () => {

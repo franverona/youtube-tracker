@@ -42,6 +42,10 @@ describe('videoStorage', () => {
     expect(await videoStorage.getById('missing')).toBeUndefined()
   })
 
+  it('getById ignores Object.prototype members', async () => {
+    expect(await videoStorage.getById('constructor')).toBeUndefined()
+  })
+
   it('getById returns stored VideoDetails for an existing id', async () => {
     mockData.state = { [sample.id]: sample }
     expect(await videoStorage.getById(sample.id)).toEqual(sample)
@@ -100,6 +104,12 @@ describe('applyVideoStorageWrite', () => {
       state: { [sample.id]: sample, [other.id]: other },
     })
     expect(mockData.state).toEqual({ [sample.id]: newer, [other.id]: other })
+  })
+
+  it('import keeps an entry whose id is an Object.prototype name', async () => {
+    const entry = { ...sample, id: 'constructor' }
+    await applyVideoStorageWrite({ type: 'video-storage:import', state: { constructor: entry } })
+    expect(mockData.state).toEqual({ constructor: entry })
   })
 })
 
