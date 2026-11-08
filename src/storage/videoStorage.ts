@@ -20,6 +20,27 @@ export const trackingEnabledItem = storage.defineItem<boolean>('local:tracking-e
   defaultValue: true,
 })
 
+/** Videos the user chose not to track, id → title (kept for the options list). */
+export type IgnoredVideosType = Record<string, string>
+
+// shortcut: written directly, not through the background queue — only the
+// popup/options change it, on a click; route it through the queue if more
+// writers appear.
+export const ignoredVideosItem = storage.defineItem<IgnoredVideosType>('local:ignored-videos', {
+  defaultValue: {},
+})
+
+export const ignoredVideos = {
+  add: async (id: string, title: string) => {
+    await ignoredVideosItem.setValue({ ...(await ignoredVideosItem.getValue()), [id]: title })
+  },
+  remove: async (id: string) => {
+    const next = { ...(await ignoredVideosItem.getValue()) }
+    delete next[id]
+    await ignoredVideosItem.setValue(next)
+  },
+}
+
 export type VideoStorageWrite =
   | { type: 'video-storage:save'; id: string; details: VideoDetails }
   | { type: 'video-storage:remove'; id: string }

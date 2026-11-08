@@ -1,9 +1,10 @@
 /** @vitest-environment-options {"url": "https://www.youtube.com/"} */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { trackingEnabledItem, videoStorage } from '@/storage'
+import { ignoredVideosItem, trackingEnabledItem, videoStorage } from '@/storage'
 
 vi.mock('@/storage', () => ({
   trackingEnabledItem: { getValue: vi.fn(), watch: vi.fn() },
+  ignoredVideosItem: { getValue: vi.fn(), watch: vi.fn() },
   videoStorage: { getById: vi.fn(), save: vi.fn(), remove: vi.fn() },
 }))
 
@@ -32,6 +33,7 @@ async function start(trackingEnabled = true) {
 beforeEach(() => {
   vi.clearAllMocks()
   runtime.id = 'ext'
+  vi.mocked(ignoredVideosItem.getValue).mockResolvedValue({})
   vi.mocked(videoStorage.getById).mockResolvedValue(undefined)
   vi.mocked(videoStorage.save).mockResolvedValue()
   vi.mocked(videoStorage.remove).mockResolvedValue()
@@ -102,6 +104,15 @@ describe('content script', () => {
     window.history.pushState(null, '', '/watch?v=BBBBBBBBBBB')
     video.dispatchEvent(new Event('pause'))
     await flush()
+    expect(videoStorage.save).not.toHaveBeenCalled()
+  })
+
+  it("doesn't resume or save a video on the don't-track list", async () => {
+    vi.mocked(ignoredVideosItem.getValue).mockResolvedValue({ [A]: 'T' })
+    const video = await start()
+    video.dispatchEvent(new Event('pause'))
+    await flush()
+    expect(videoStorage.getById).not.toHaveBeenCalled()
     expect(videoStorage.save).not.toHaveBeenCalled()
   })
 

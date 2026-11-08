@@ -1,4 +1,4 @@
-import { trackingEnabledItem, videoStorage } from '@/storage'
+import { ignoredVideosItem, trackingEnabledItem, videoStorage } from '@/storage'
 import { loadProgress, saveProgress } from './content/videoUtils'
 import { getVideoElement, getVideoId } from './content/youtubeUtils'
 
@@ -15,6 +15,11 @@ export default defineContentScript({
     trackingEnabledItem.watch((v) => {
       isTrackingEnabled = v
     })
+    let ignored = await ignoredVideosItem.getValue()
+    ignoredVideosItem.watch((v) => {
+      ignored = v
+    })
+    const isIgnored = (id: string) => Object.hasOwn(ignored, id)
 
     let currentVideoId: string | null = null
     let currentVideoElement: HTMLVideoElement | null = null
@@ -39,7 +44,8 @@ export default defineContentScript({
       }
     }
 
-    // False when tracking is paused, the extension was reloaded (orphaned
+    // False when tracking is paused or the video is on the "don't track" list,
+    // the extension was reloaded (orphaned
     // script), or YouTube already swapped the reused <video> to the next video
     // but re-init hasn't run yet — saving then would write B's time under A.
     // Also false during an ad: it plays in the same <video>, so its time and
@@ -52,6 +58,7 @@ export default defineContentScript({
       return (
         isTrackingEnabled &&
         !!currentVideoId &&
+        !isIgnored(currentVideoId) &&
         getVideoId() === currentVideoId &&
         !document.querySelector('#movie_player.ad-showing')
       )
@@ -104,7 +111,7 @@ export default defineContentScript({
       videoListenerController = new AbortController()
       const { signal } = videoListenerController
 
-      if (isTrackingEnabled && !isSameVideo) {
+      if (isTrackingEnabled && !isSameVideo && !isIgnored(currentVideoId)) {
         try {
           await loadProgress(currentVideoId, currentVideoElement, signal)
         } catch (e) {
