@@ -1,6 +1,7 @@
 export function getVideoId() {
-  const urlParams = new URLSearchParams(window.location.search)
-  return urlParams.get('v')
+  const id = new URLSearchParams(window.location.search).get('v')
+  // Same shape isValidVideoState requires, so every saved entry stays importable.
+  return id && /^[\w-]{11}$/.test(id) ? id : null
 }
 
 export function getVideoElement() {

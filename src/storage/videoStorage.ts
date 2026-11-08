@@ -65,7 +65,8 @@ export function applyVideoStorageWrite(write: VideoStorageWrite): Promise<void> 
       return enqueueWrite((current) => {
         const next = { ...current }
         for (const [id, entry] of Object.entries(write.state)) {
-          if (!next[id] || entry.timestamp > next[id].timestamp) next[id] = entry
+          // hasOwn: ids like `constructor` would otherwise hit Object.prototype.
+          if (!Object.hasOwn(next, id) || entry.timestamp > next[id].timestamp) next[id] = entry
         }
         return next
       })
@@ -82,7 +83,7 @@ async function send(write: VideoStorageWrite): Promise<void> {
 export const videoStorage = {
   getById: async (id: string): Promise<VideoDetails | undefined> => {
     const state = await videoStorageItem.getValue()
-    return state[id]
+    return Object.hasOwn(state, id) ? state[id] : undefined
   },
   save: (id: string, details: VideoDetails) => send({ type: 'video-storage:save', id, details }),
   remove: (id: string) => send({ type: 'video-storage:remove', id }),
