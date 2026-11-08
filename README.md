@@ -46,6 +46,7 @@ The release ZIP isn't signed by Mozilla, so release Firefox only loads it tempor
 #### Prerequisites
 
 - Node.js ≥24.15.0 (use `.nvmrc`: `nvm use`)
+- pnpm — `corepack enable` (bundled with Node 24) uses the version pinned in `package.json`'s `packageManager`; on Node 25+, which no longer bundles corepack, use `npm i -g pnpm`
 
 #### Setup
 
