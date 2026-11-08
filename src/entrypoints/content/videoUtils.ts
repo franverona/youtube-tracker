@@ -4,6 +4,9 @@ import { getVideoId, getVideoTitle } from './youtubeUtils'
 // Skip previews and misclicks so they don't clutter the list and badge.
 export const MIN_SAVED_PROGRESS = 15
 
+// Saves can be up to 30s apart, so step back a little for context on resume.
+export const RESUME_REWIND = 3
+
 export async function saveProgress(videoId: string, progress: number, duration?: number) {
   if (!videoId || isNaN(progress) || progress < 0) {
     console.warn('saveProgress: Missing video ID or current time.')
@@ -64,7 +67,7 @@ export async function loadProgress(
     // Within 5s of the end: let it start over instead of landing on the end screen.
     if (videoElement.duration - progress < 5) return
 
-    videoElement.currentTime = progress
+    videoElement.currentTime = Math.max(0, progress - RESUME_REWIND)
 
     // Only force playback when there's a real position to resume; a near-zero
     // entry shouldn't override the user's autoplay-off choice.
