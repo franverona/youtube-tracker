@@ -45,7 +45,7 @@ The release ZIP isn't signed by Mozilla, so release Firefox only loads it tempor
 
 #### Prerequisites
 
-- Node.js ≥24.12.0 (use `.nvmrc`: `nvm use`)
+- Node.js ≥24.15.0 (use `.nvmrc`: `nvm use`)
 
 #### Setup
 
