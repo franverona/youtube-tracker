@@ -93,7 +93,7 @@ Build outputs go to `.output/chrome-mv3/` and `.output/firefox-mv2/`.
 1. **Content Script Initialization** (`src/entrypoints/content.ts`):
    - Defined via `defineContentScript` with `matches: ['https://*.youtube.com/*']` (YouTube reaches most videos via in-page navigation, so the script must already be present; it bails outside `/watch`) and `excludeMatches: ['https://music.youtube.com/*']` (Music also uses `/watch?v=`)
    - Re-initializes on YouTube SPA navigation (`yt-navigate-finish`, `popstate`), and on a capture-phase `play` from a new main `<video>` — YouTube can replace the element without navigating; for the same video it only re-attaches listeners and doesn't resume again
-   - Saves on `yt-navigate-start`, while the URL still names the current video, so leaving `/watch` (e.g. into the miniplayer, which isn't tracked) keeps the real position
+   - Saves on `yt-navigate-start`, so leaving a video (home page, another video, the miniplayer — which isn't tracked) keeps the real position. YouTube has usually already changed the URL by then, so this one save skips `canWrite()`'s URL check; the `<video>` still holds the old video until the next page's data loads
    - Implements retry logic to handle race conditions with YouTube's dynamic page loading
 
 2. **Progress Tracking**:
